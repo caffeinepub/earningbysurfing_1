@@ -201,3 +201,181 @@ export function useTrackVisitor() {
     },
   });
 }
+
+export function useAutoPostCategories() {
+  const { actor, isFetching } = useActor();
+  return useQuery<string[]>({
+    queryKey: ["autoPostCategories"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAutoPostCategories();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAddAutoPostCategory() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (category: string) => {
+      if (!actor) throw new Error("No actor");
+      return actor.addAutoPostCategory(category);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["autoPostCategories"] }),
+  });
+}
+
+export function useRemoveAutoPostCategory() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (category: string) => {
+      if (!actor) throw new Error("No actor");
+      return actor.removeAutoPostCategory(category);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["autoPostCategories"] }),
+  });
+}
+
+export function useAllInventoryProducts() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["inventoryProducts"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllInventoryProducts();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAddInventoryProduct() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      name: string;
+      price: number;
+      category: string;
+      affiliateLink: string;
+    }) => {
+      if (!actor) throw new Error("No actor");
+      return actor.addInventoryProduct(
+        args.name,
+        args.price,
+        args.category,
+        args.affiliateLink,
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventoryProducts"] }),
+  });
+}
+
+export function useDeleteInventoryProduct() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error("No actor");
+      return actor.deleteInventoryProduct(id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventoryProducts"] }),
+  });
+}
+
+export function useVendorRequests() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["vendorRequests"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getVendorRequests();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSubmitVendorRequest() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      vendorName: string;
+      businessName: string;
+      productName: string;
+      category: string;
+      description: string;
+      price: number;
+      websiteLink: string;
+      contactEmail: string;
+    }) => {
+      if (!actor) throw new Error("No actor");
+      return actor.submitVendorRequest({
+        id: BigInt(0),
+        vendorName: args.vendorName,
+        businessName: args.businessName,
+        productName: args.productName,
+        category: args.category,
+        description: args.description,
+        price: args.price,
+        websiteLink: args.websiteLink,
+        contactEmail: args.contactEmail,
+        status: "pending",
+        submittedAt: BigInt(Date.now()) * BigInt(1000000),
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["vendorRequests"] }),
+  });
+}
+
+export function useUpdateVendorRequestStatus() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { id: bigint; status: string }) => {
+      if (!actor) throw new Error("No actor");
+      return actor.updateVendorRequestStatus(args.id, args.status);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["vendorRequests"] }),
+  });
+}
+
+export function useOrders() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["orders"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getOrders();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useRoundRobinIndex() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["roundRobinIndex"],
+    queryFn: async () => {
+      if (!actor) return BigInt(0);
+      return actor.getRoundRobinIndex();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSubmitOrder() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { productName: string; totalMembers: bigint }) => {
+      if (!actor) throw new Error("No actor");
+      return actor.submitOrder(args.productName, args.totalMembers);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: ["roundRobinIndex"] });
+    },
+  });
+}

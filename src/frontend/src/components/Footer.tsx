@@ -1,5 +1,6 @@
 import { Facebook, Globe, Instagram, Twitter, Youtube } from "lucide-react";
 import { useEffect } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
   useLiveVisitorCount,
   useTrackVisitor,
@@ -34,6 +35,7 @@ export default function Footer() {
   const { data: totalVisitors } = useVisitorCount();
   const { data: liveVisitors } = useLiveVisitorCount();
   const { mutate: trackVisitor } = useTrackVisitor();
+  const { t } = useLanguage();
 
   useEffect(() => {
     trackVisitor();
@@ -47,9 +49,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand column */}
           <div>
-            <h3 className="text-xl font-black uppercase tracking-widest mb-4">
+            <h3 className="text-xl font-black uppercase tracking-widest mb-1">
               EarningBySurfing
             </h3>
+            <p className="text-white font-bold italic tracking-widest text-sm mb-4">
+              ✦ {t("One World One Future")} ✦
+            </p>
             <p className="text-white/80 text-sm font-medium leading-relaxed mb-6 normal-case">
               Your premium destination for high-demand products and exclusive
               affiliate deals. Curated with precision for the modern consumer.

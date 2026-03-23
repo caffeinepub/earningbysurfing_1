@@ -32,28 +32,68 @@ export const Product = IDL.Record({
   'aiReview' : IDL.Text,
 });
 export const ProductId = IDL.Nat;
+export const InventoryProduct = IDL.Record({
+  'id' : IDL.Nat,
+  'name' : IDL.Text,
+  'category' : IDL.Text,
+  'affiliateLink' : IDL.Text,
+  'price' : IDL.Float64,
+});
 export const Time = IDL.Int;
 export const UserProfile = IDL.Record({
   'joinDate' : Time,
   'name' : IDL.Text,
   'activityCount' : IDL.Nat,
 });
+export const Order = IDL.Record({
+  'id' : IDL.Nat,
+  'productName' : IDL.Text,
+  'assignedMemberId' : IDL.Text,
+  'timestamp' : Time,
+  'memberIndex' : IDL.Nat,
+});
 export const SiteSettings = IDL.Record({
   'siteTitle' : IDL.Text,
   'announcementText' : IDL.Text,
 });
+export const VendorRequest = IDL.Record({
+  'id' : IDL.Nat,
+  'websiteLink' : IDL.Text,
+  'status' : IDL.Text,
+  'businessName' : IDL.Text,
+  'submittedAt' : Time,
+  'description' : IDL.Text,
+  'productName' : IDL.Text,
+  'contactEmail' : IDL.Text,
+  'category' : IDL.Text,
+  'price' : IDL.Float64,
+  'vendorName' : IDL.Text,
+});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addAutoPostCategory' : IDL.Func([IDL.Text], [], []),
+  'addInventoryProduct' : IDL.Func(
+      [IDL.Text, IDL.Float64, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createProduct' : IDL.Func([Product], [ProductId], []),
   'deleteAllProducts' : IDL.Func([], [], []),
+  'deleteInventoryProduct' : IDL.Func([IDL.Nat], [], []),
   'deleteProduct' : IDL.Func([IDL.Nat], [], []),
+  'getAllInventoryProducts' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Nat, InventoryProduct))],
+      ['query'],
+    ),
   'getAllProducts' : IDL.Func(
       [],
       [IDL.Vec(IDL.Tuple(ProductId, Product))],
       ['query'],
     ),
+  'getAutoPostCategories' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getLiveVisitorCount' : IDL.Func([], [IDL.Nat], ['query']),
@@ -62,29 +102,47 @@ export const idlService = IDL.Service({
       [IDL.Opt(IDL.Record({ 'joinDate' : Time, 'activityCount' : IDL.Nat }))],
       ['query'],
     ),
+  'getOrders' : IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Nat, Order))], ['query']),
   'getProduct' : IDL.Func([IDL.Nat], [IDL.Opt(Product)], ['query']),
   'getProductsByCategory' : IDL.Func(
       [Category],
       [IDL.Vec(IDL.Tuple(ProductId, Product))],
       ['query'],
     ),
+  'getRoundRobinIndex' : IDL.Func([], [IDL.Nat], ['query']),
   'getSiteSettings' : IDL.Func([], [SiteSettings], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'getVendorRequests' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Nat, VendorRequest))],
+      ['query'],
+    ),
   'getVisitorCount' : IDL.Func([], [IDL.Nat], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isCategoryAutoPosted' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   'listAllUsers' : IDL.Func(
       [],
       [IDL.Vec(IDL.Tuple(IDL.Principal, UserProfile))],
       ['query'],
     ),
+  'removeAutoPostCategory' : IDL.Func([IDL.Text], [], []),
+  'resetRoundRobinIndex' : IDL.Func([], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'submitOrder' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Nat], []),
+  'submitVendorRequest' : IDL.Func([VendorRequest], [IDL.Nat], []),
   'trackVisitor' : IDL.Func([], [], []),
+  'updateInventoryProduct' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Float64, IDL.Text, IDL.Text],
+      [],
+      [],
+    ),
   'updateProduct' : IDL.Func([IDL.Nat, Product], [], []),
   'updateSiteSettings' : IDL.Func([SiteSettings], [], []),
+  'updateVendorRequestStatus' : IDL.Func([IDL.Nat, IDL.Text], [], []),
 });
 
 export const idlInitArgs = [];
@@ -114,28 +172,68 @@ export const idlFactory = ({ IDL }) => {
     'aiReview' : IDL.Text,
   });
   const ProductId = IDL.Nat;
+  const InventoryProduct = IDL.Record({
+    'id' : IDL.Nat,
+    'name' : IDL.Text,
+    'category' : IDL.Text,
+    'affiliateLink' : IDL.Text,
+    'price' : IDL.Float64,
+  });
   const Time = IDL.Int;
   const UserProfile = IDL.Record({
     'joinDate' : Time,
     'name' : IDL.Text,
     'activityCount' : IDL.Nat,
   });
+  const Order = IDL.Record({
+    'id' : IDL.Nat,
+    'productName' : IDL.Text,
+    'assignedMemberId' : IDL.Text,
+    'timestamp' : Time,
+    'memberIndex' : IDL.Nat,
+  });
   const SiteSettings = IDL.Record({
     'siteTitle' : IDL.Text,
     'announcementText' : IDL.Text,
   });
+  const VendorRequest = IDL.Record({
+    'id' : IDL.Nat,
+    'websiteLink' : IDL.Text,
+    'status' : IDL.Text,
+    'businessName' : IDL.Text,
+    'submittedAt' : Time,
+    'description' : IDL.Text,
+    'productName' : IDL.Text,
+    'contactEmail' : IDL.Text,
+    'category' : IDL.Text,
+    'price' : IDL.Float64,
+    'vendorName' : IDL.Text,
+  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addAutoPostCategory' : IDL.Func([IDL.Text], [], []),
+    'addInventoryProduct' : IDL.Func(
+        [IDL.Text, IDL.Float64, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createProduct' : IDL.Func([Product], [ProductId], []),
     'deleteAllProducts' : IDL.Func([], [], []),
+    'deleteInventoryProduct' : IDL.Func([IDL.Nat], [], []),
     'deleteProduct' : IDL.Func([IDL.Nat], [], []),
+    'getAllInventoryProducts' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Nat, InventoryProduct))],
+        ['query'],
+      ),
     'getAllProducts' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(ProductId, Product))],
         ['query'],
       ),
+    'getAutoPostCategories' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getLiveVisitorCount' : IDL.Func([], [IDL.Nat], ['query']),
@@ -144,29 +242,47 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(IDL.Record({ 'joinDate' : Time, 'activityCount' : IDL.Nat }))],
         ['query'],
       ),
+    'getOrders' : IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Nat, Order))], ['query']),
     'getProduct' : IDL.Func([IDL.Nat], [IDL.Opt(Product)], ['query']),
     'getProductsByCategory' : IDL.Func(
         [Category],
         [IDL.Vec(IDL.Tuple(ProductId, Product))],
         ['query'],
       ),
+    'getRoundRobinIndex' : IDL.Func([], [IDL.Nat], ['query']),
     'getSiteSettings' : IDL.Func([], [SiteSettings], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'getVendorRequests' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Nat, VendorRequest))],
+        ['query'],
+      ),
     'getVisitorCount' : IDL.Func([], [IDL.Nat], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isCategoryAutoPosted' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
     'listAllUsers' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(IDL.Principal, UserProfile))],
         ['query'],
       ),
+    'removeAutoPostCategory' : IDL.Func([IDL.Text], [], []),
+    'resetRoundRobinIndex' : IDL.Func([], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'submitOrder' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Nat], []),
+    'submitVendorRequest' : IDL.Func([VendorRequest], [IDL.Nat], []),
     'trackVisitor' : IDL.Func([], [], []),
+    'updateInventoryProduct' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Float64, IDL.Text, IDL.Text],
+        [],
+        [],
+      ),
     'updateProduct' : IDL.Func([IDL.Nat, Product], [], []),
     'updateSiteSettings' : IDL.Func([SiteSettings], [], []),
+    'updateVendorRequestStatus' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   });
 };
 

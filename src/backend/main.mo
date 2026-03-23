@@ -1,17 +1,22 @@
-import Text "mo:core/Text";
+import Float "mo:core/Float";
+import Iter "mo:core/Iter";
+import List "mo:core/List";
 import Map "mo:core/Map";
+import Nat "mo:core/Nat";
+import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Text "mo:core/Text";
 import Time "mo:core/Time";
-import Order "mo:core/Order";
-import Migration "migration";
+
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-(with migration = Migration.run)
+
+
+
 actor {
-  // Types
-  public type Category = {
+  type Category = {
     #tech;
     #lifestyle;
     #wellness;
@@ -20,6 +25,7 @@ actor {
     #technology;
     #toys;
   };
+
   public type Product = {
     title : Text;
     description : Text;
@@ -41,143 +47,281 @@ actor {
     announcementText : Text;
   };
 
-  // State
-  var visitorCount : Nat = 0;
-  var liveVisitorCount : Nat = 0;
-  let visitorTimeout : Int = 1_000_000_000 * 60 * 10;
-  let liveVisitors = Map.empty<Principal, Time.Time>();
+  public type InventoryProduct = {
+    id : Nat;
+    name : Text;
+    price : Float;
+    category : Text;
+    affiliateLink : Text;
+  };
 
   public type ProductId = Nat;
 
-  let products = Map.empty<Nat, Product>();
-  var nextProductId : Nat = 1;
+  let seedProducts : [Product] = [
+    {
+      title = "Sony WH-1000XM5 Noise-Cancelling Headphones";
+      description = "Industry-leading noise cancellation with 30-hour battery life.";
+      category = #tech;
+      imageUrl = "";
+      featured = true;
+      aiReview = "Top-tier affiliate pick with consistent high conversions.";
+      qualityScore = 97;
+    },
+    {
+      title = "Apple AirTag 4-Pack Tracker";
+      description = "Precision finding with ultra-wideband technology.";
+      category = #tech;
+      imageUrl = "";
+      featured = true;
+      aiReview = "Dominates item-tracking category with seamless iOS integration.";
+      qualityScore = 94;
+    },
+    {
+      title = "Anker 737 Power Bank 24000mAh";
+      description = "65W fast charging for laptops, phones, and tablets.";
+      category = #tech;
+      imageUrl = "";
+      featured = false;
+      aiReview = "Proven high-conversion affiliate product.";
+      qualityScore = 92;
+    },
+    {
+      title = "Logitech MX Master 3S Wireless Mouse";
+      description = "Ergonomic precision mouse with ultra-fast MagSpeed scrolling.";
+      category = #tech;
+      imageUrl = "";
+      featured = false;
+      aiReview = "Excellent affiliate commission potential.";
+      qualityScore = 95;
+    },
+    {
+      title = "YETI Rambler 30 oz Travel Tumbler";
+      description = "Double-wall vacuum insulation. Gold standard in premium drinkware.";
+      category = #lifestyle;
+      imageUrl = "";
+      featured = true;
+      aiReview = "Strong customer satisfaction and low return rates.";
+      qualityScore = 96;
+    },
+    {
+      title = "Kindle Paperwhite 16GB E-Reader";
+      description = "Waterproof, glare-free display with 3-month battery life.";
+      category = #lifestyle;
+      imageUrl = "";
+      featured = true;
+      aiReview = "Perennial bestseller with outstanding affiliate commission history.";
+      qualityScore = 93;
+    },
+    {
+      title = "Nespresso Vertuo Next Coffee Machine";
+      description = "One-touch brewing with barcode-reading technology.";
+      category = #lifestyle;
+      imageUrl = "";
+      featured = false;
+      aiReview = "Top lifestyle affiliate pick with subscription upsell potential.";
+      qualityScore = 90;
+    },
+    {
+      title = "Osprey Farpoint 40 Travel Backpack";
+      description = "Carry-on compliant travel pack with integrated suspension.";
+      category = #lifestyle;
+      imageUrl = "";
+      featured = false;
+      aiReview = "Consistent 4.8-star ratings and strong community endorsements.";
+      qualityScore = 91;
+    },
+    {
+      title = "Theragun Prime Percussive Therapy Device";
+      description = "Professional-grade muscle treatment with 5 attachments.";
+      category = #wellness;
+      imageUrl = "";
+      featured = true;
+      aiReview = "Elite affiliate product with high average order value.";
+      qualityScore = 98;
+    },
+    {
+      title = "Fitbit Charge 6 Advanced Fitness Tracker";
+      description = "Built-in GPS, heart rate monitoring, and Google integration.";
+      category = #wellness;
+      imageUrl = "";
+      featured = true;
+      aiReview = "Reliable affiliate product with strong brand recognition.";
+      qualityScore = 89;
+    },
+    {
+      title = "Manduka PRO Yoga Mat 6mm";
+      description = "Lifetime guarantee yoga mat with non-slip grip.";
+      category = #wellness;
+      imageUrl = "";
+      featured = false;
+      aiReview = "Excellent for wellness-focused affiliate campaigns.";
+      qualityScore = 88;
+    },
+    {
+      title = "Hydro Flask 32 oz Wide Mouth Water Bottle";
+      description = "TempShield insulation. Keeps cold 24hrs, hot 12hrs. BPA-free.";
+      category = #wellness;
+      imageUrl = "";
+      featured = false;
+      aiReview = "Outstanding organic affiliate reach in wellness communities.";
+      qualityScore = 93;
+    }
+  ];
 
+  let seedInventory : [(Text, Float, Text, Text)] = [
+    // Tech (40 products)
+    ("Samsung 65\" 4K QLED Smart TV", 1299.99, "Tech", "https://www.amazon.com/s?k=Samsung+65+4K+QLED+Smart+TV"),
+    ("Apple MacBook Air M3 13-inch", 1099.00, "Tech", "https://www.amazon.com/s?k=Apple+MacBook+Air+M3"),
+    ("Sony WH-1000XM5 Headphones", 279.99, "Tech", "https://www.amazon.com/s?k=Sony+WH-1000XM5"),
+    ("Anker 737 Power Bank 24000mAh", 85.99, "Tech", "https://www.amazon.com/s?k=Anker+737+Power+Bank"),
+    ("Logitech MX Master 3S Mouse", 99.99, "Tech", "https://www.amazon.com/s?k=Logitech+MX+Master+3S"),
+    ("Apple AirTag 4-Pack", 99.00, "Tech", "https://www.amazon.com/s?k=Apple+AirTag+4+Pack"),
+    ("Bose QuietComfort 45 Headphones", 229.00, "Tech", "https://www.amazon.com/s?k=Bose+QuietComfort+45"),
+    ("DJI Mini 4 Pro Drone", 759.00, "Tech", "https://www.amazon.com/s?k=DJI+Mini+4+Pro"),
+    ("GoPro HERO12 Black", 349.99, "Tech", "https://www.amazon.com/s?k=GoPro+HERO12+Black"),
+    ("iPad Pro 12.9-inch M2", 1099.00, "Tech", "https://www.amazon.com/s?k=iPad+Pro+12.9+M2"),
+    ("Garmin Fenix 7 Pro GPS Watch", 799.99, "Tech", "https://www.amazon.com/s?k=Garmin+Fenix+7+Pro"),
+    ("Sony PlayStation 5 Console", 499.99, "Tech", "https://www.amazon.com/s?k=Sony+PlayStation+5"),
+    ("Meta Quest 3 VR Headset", 499.99, "Tech", "https://www.amazon.com/s?k=Meta+Quest+3"),
+    ("ASUS ROG Zephyrus G14 Laptop", 1449.99, "Tech", "https://www.amazon.com/s?k=ASUS+ROG+Zephyrus+G14"),
+    ("Ring Video Doorbell Pro 2", 249.99, "Tech", "https://www.amazon.com/s?k=Ring+Video+Doorbell+Pro+2"),
+    ("Anker USB-C Hub 10-in-1", 45.99, "Tech", "https://www.amazon.com/s?k=Anker+USB-C+Hub+10-in-1"),
+    ("Razer BlackWidow V3 Keyboard", 129.99, "Tech", "https://www.amazon.com/s?k=Razer+BlackWidow+V3"),
+    ("LG 27\" 4K UHD Monitor", 449.99, "Tech", "https://www.amazon.com/s?k=LG+27+4K+UHD+Monitor"),
+    ("Kindle Paperwhite 16GB", 139.99, "Tech", "https://www.amazon.com/s?k=Kindle+Paperwhite+16GB"),
+    ("Google Pixel 8 Pro Smartphone", 899.00, "Tech", "https://www.amazon.com/s?k=Google+Pixel+8+Pro"),
+    ("Philips Hue Starter Kit", 179.99, "Tech", "https://www.amazon.com/s?k=Philips+Hue+Starter+Kit"),
+    ("Dyson V15 Detect Vacuum", 749.99, "Tech", "https://www.amazon.com/s?k=Dyson+V15+Detect"),
+    ("iRobot Roomba i7+ Robot Vacuum", 599.99, "Tech", "https://www.amazon.com/s?k=iRobot+Roomba+i7+Plus"),
+    ("Nest Learning Thermostat 4th Gen", 279.99, "Tech", "https://www.amazon.com/s?k=Nest+Learning+Thermostat"),
+    ("TP-Link Archer AXE75 Wi-Fi 6E", 199.99, "Tech", "https://www.amazon.com/s?k=TP-Link+Archer+AXE75"),
+    ("JBL Charge 5 Portable Speaker", 149.95, "Tech", "https://www.amazon.com/s?k=JBL+Charge+5"),
+    ("Fujifilm Instax Mini 12 Camera", 79.99, "Tech", "https://www.amazon.com/s?k=Fujifilm+Instax+Mini+12"),
+    ("Xbox Series X Console", 499.99, "Tech", "https://www.amazon.com/s?k=Xbox+Series+X"),
+    ("Elgato Stream Deck MK.2", 149.99, "Tech", "https://www.amazon.com/s?k=Elgato+Stream+Deck+MK2"),
+    ("Corsair K100 RGB Keyboard", 229.99, "Tech", "https://www.amazon.com/s?k=Corsair+K100+RGB+Keyboard"),
+    ("SteelSeries Arctis Nova Pro Headset", 249.99, "Tech", "https://www.amazon.com/s?k=SteelSeries+Arctis+Nova+Pro"),
+    ("Arlo Pro 4 Security Camera 4-Pack", 349.99, "Tech", "https://www.amazon.com/s?k=Arlo+Pro+4+Security+Camera"),
+    ("Western Digital 4TB External HDD", 89.99, "Tech", "https://www.amazon.com/s?k=Western+Digital+4TB+External"),
+    ("Samsung T7 2TB Portable SSD", 129.99, "Tech", "https://www.amazon.com/s?k=Samsung+T7+2TB+SSD"),
+    ("Amazfit GTR 4 Smart Watch", 199.99, "Tech", "https://www.amazon.com/s?k=Amazfit+GTR+4"),
+    ("Tile Mate 4-Pack Bluetooth Tracker", 59.99, "Tech", "https://www.amazon.com/s?k=Tile+Mate+4+Pack"),
+    ("Eufy RoboVac 11S Max", 219.99, "Tech", "https://www.amazon.com/s?k=Eufy+RoboVac+11S+Max"),
+    ("Belkin MagSafe 3-in-1 Charger", 99.99, "Tech", "https://www.amazon.com/s?k=Belkin+MagSafe+3-in-1"),
+    ("Anker Soundcore Motion X600", 99.99, "Tech", "https://www.amazon.com/s?k=Anker+Soundcore+Motion+X600"),
+    ("Wacom Intuos Pro Medium Tablet", 349.95, "Tech", "https://www.amazon.com/s?k=Wacom+Intuos+Pro+Medium"),
+    // Lifestyle (30 products)
+    ("YETI Rambler 30 oz Tumbler", 34.99, "Lifestyle", "https://www.amazon.com/s?k=YETI+Rambler+30+oz"),
+    ("Osprey Farpoint 40 Backpack", 160.00, "Lifestyle", "https://www.amazon.com/s?k=Osprey+Farpoint+40"),
+    ("Nespresso Vertuo Next Coffee Machine", 179.00, "Lifestyle", "https://www.amazon.com/s?k=Nespresso+Vertuo+Next"),
+    ("Moleskine Classic Notebook Large", 22.99, "Lifestyle", "https://www.amazon.com/s?k=Moleskine+Classic+Notebook+Large"),
+    ("Levi's 501 Original Jeans", 69.50, "Lifestyle", "https://www.amazon.com/s?k=Levis+501+Original+Jeans"),
+    ("Beats Studio Pro Wireless Headphones", 349.95, "Lifestyle", "https://www.amazon.com/s?k=Beats+Studio+Pro"),
+    ("Peak Design Everyday Backpack 20L", 279.95, "Lifestyle", "https://www.amazon.com/s?k=Peak+Design+Everyday+Backpack"),
+    ("Ember Temperature Control Mug 2", 99.95, "Lifestyle", "https://www.amazon.com/s?k=Ember+Temperature+Control+Mug+2"),
+    ("Le Creuset Dutch Oven 5.5 Qt", 399.95, "Lifestyle", "https://www.amazon.com/s?k=Le+Creuset+Dutch+Oven"),
+    ("Patagonia Nano Puff Jacket", 229.00, "Lifestyle", "https://www.amazon.com/s?k=Patagonia+Nano+Puff+Jacket"),
+    ("KitchenAid Stand Mixer 5 Qt", 449.99, "Lifestyle", "https://www.amazon.com/s?k=KitchenAid+Stand+Mixer"),
+    ("Instant Pot Duo 7-in-1 6 Qt", 89.95, "Lifestyle", "https://www.amazon.com/s?k=Instant+Pot+Duo+7-in-1"),
+    ("Cuisinart Air Fryer Toaster Oven", 229.95, "Lifestyle", "https://www.amazon.com/s?k=Cuisinart+Air+Fryer+Toaster+Oven"),
+    ("Ninja Creami Ice Cream Maker", 179.99, "Lifestyle", "https://www.amazon.com/s?k=Ninja+Creami+Ice+Cream+Maker"),
+    ("Vitamix 5200 Blender", 449.95, "Lifestyle", "https://www.amazon.com/s?k=Vitamix+5200+Blender"),
+    ("Nike Air Max 270 Sneakers", 150.00, "Lifestyle", "https://www.amazon.com/s?k=Nike+Air+Max+270"),
+    ("Ray-Ban Classic Aviator Sunglasses", 161.00, "Lifestyle", "https://www.amazon.com/s?k=Ray-Ban+Classic+Aviator"),
+    ("Rimowa Essential Cabin Suitcase", 725.00, "Lifestyle", "https://www.amazon.com/s?k=Rimowa+Essential+Cabin"),
+    ("S'well Stainless Steel Bottle 17 oz", 35.00, "Lifestyle", "https://www.amazon.com/s?k=Swell+Stainless+Steel+Bottle"),
+    ("Caudalie Beauty Elixir Face Mist", 49.00, "Lifestyle", "https://www.amazon.com/s?k=Caudalie+Beauty+Elixir"),
+    ("Barefoot Dreams CozyChic Throw Blanket", 120.00, "Lifestyle", "https://www.amazon.com/s?k=Barefoot+Dreams+CozyChic+Throw"),
+    ("Diptyque Baies Scented Candle", 75.00, "Lifestyle", "https://www.amazon.com/s?k=Diptyque+Baies+Candle"),
+    ("Braun Series 9 Pro Electric Shaver", 329.99, "Lifestyle", "https://www.amazon.com/s?k=Braun+Series+9+Pro"),
+    ("Dyson Airwrap Complete Styler", 599.99, "Lifestyle", "https://www.amazon.com/s?k=Dyson+Airwrap+Complete"),
+    ("OXO Good Grips 20-Piece Storage Set", 79.99, "Lifestyle", "https://www.amazon.com/s?k=OXO+Good+Grips+Storage+Set"),
+    ("Cuisinart 12-Cup Coffee Maker", 89.95, "Lifestyle", "https://www.amazon.com/s?k=Cuisinart+12+Cup+Coffee+Maker"),
+    ("Weber Spirit II E-310 Gas Grill", 549.00, "Lifestyle", "https://www.amazon.com/s?k=Weber+Spirit+II+E-310"),
+    ("Pendleton Wool Throw Blanket", 129.00, "Lifestyle", "https://www.amazon.com/s?k=Pendleton+Wool+Throw+Blanket"),
+    ("All-Clad D3 Stainless Cookware Set 10-Piece", 699.95, "Lifestyle", "https://www.amazon.com/s?k=All-Clad+D3+Cookware+Set"),
+    ("Zulay Kitchen Milk Frother", 19.99, "Lifestyle", "https://www.amazon.com/s?k=Zulay+Kitchen+Milk+Frother"),
+    // Wellness (30 products)
+    ("Theragun Prime Therapy Device", 299.00, "Wellness", "https://www.amazon.com/s?k=Theragun+Prime"),
+    ("Fitbit Charge 6 Fitness Tracker", 159.95, "Wellness", "https://www.amazon.com/s?k=Fitbit+Charge+6"),
+    ("Manduka PRO Yoga Mat 6mm", 120.00, "Wellness", "https://www.amazon.com/s?k=Manduka+PRO+Yoga+Mat"),
+    ("Hydro Flask 32 oz Water Bottle", 44.95, "Wellness", "https://www.amazon.com/s?k=Hydro+Flask+32+oz"),
+    ("Withings Body+ Smart Scale", 99.95, "Wellness", "https://www.amazon.com/s?k=Withings+Body+Plus+Smart+Scale"),
+    ("Oura Ring Gen 3 Health Tracker", 299.00, "Wellness", "https://www.amazon.com/s?k=Oura+Ring+Gen+3"),
+    ("NordicTrack T 6.5 S Treadmill", 999.00, "Wellness", "https://www.amazon.com/s?k=NordicTrack+T+6.5+S+Treadmill"),
+    ("Bowflex SelectTech 552 Dumbbells", 399.00, "Wellness", "https://www.amazon.com/s?k=Bowflex+SelectTech+552"),
+    ("TRX All-in-One Suspension Trainer", 169.95, "Wellness", "https://www.amazon.com/s?k=TRX+All-in-One+Suspension+Trainer"),
+    ("Garmin Venu 3 GPS Smartwatch", 449.99, "Wellness", "https://www.amazon.com/s?k=Garmin+Venu+3"),
+    ("Therabody RecoveryAir JetBoots", 749.00, "Wellness", "https://www.amazon.com/s?k=Therabody+RecoveryAir+JetBoots"),
+    ("Onnit Alpha Brain Nootropic", 79.95, "Wellness", "https://www.amazon.com/s?k=Onnit+Alpha+Brain"),
+    ("Garden of Life Raw Organic Protein", 49.95, "Wellness", "https://www.amazon.com/s?k=Garden+of+Life+Raw+Protein"),
+    ("Nutribullet Pro 900 Blender", 89.99, "Wellness", "https://www.amazon.com/s?k=Nutribullet+Pro+900"),
+    ("Calm Premium Meditation App (1yr)", 69.99, "Wellness", "https://www.amazon.com/s?k=Calm+Premium+Subscription"),
+    ("Peloton Guide Strength Trainer", 295.00, "Wellness", "https://www.amazon.com/s?k=Peloton+Guide"),
+    ("Casper Original Foam Pillow", 65.00, "Wellness", "https://www.amazon.com/s?k=Casper+Original+Foam+Pillow"),
+    ("Manta Sleep Mask", 35.00, "Wellness", "https://www.amazon.com/s?k=Manta+Sleep+Mask"),
+    ("Eight Sleep Pod 3 Cover", 2295.00, "Wellness", "https://www.amazon.com/s?k=Eight+Sleep+Pod+3"),
+    ("Goli Apple Cider Vinegar Gummies", 19.99, "Wellness", "https://www.amazon.com/s?k=Goli+Apple+Cider+Vinegar+Gummies"),
+    ("Vital Proteins Collagen Peptides", 43.00, "Wellness", "https://www.amazon.com/s?k=Vital+Proteins+Collagen+Peptides"),
+    ("Lululemon Align High-Rise Leggings", 98.00, "Wellness", "https://www.amazon.com/s?k=Lululemon+Align+Leggings"),
+    ("Gaiam Premium Yoga Block Set", 22.98, "Wellness", "https://www.amazon.com/s?k=Gaiam+Premium+Yoga+Block"),
+    ("Hyperice Normatec 3 Leg System", 699.00, "Wellness", "https://www.amazon.com/s?k=Hyperice+Normatec+3+Leg"),
+    ("Acupressure Mat and Pillow Set", 39.99, "Wellness", "https://www.amazon.com/s?k=Acupressure+Mat+Pillow+Set"),
+    ("Sunlighten mPulse Believe Sauna", 4999.00, "Wellness", "https://www.amazon.com/s?k=Sunlighten+Infrared+Sauna"),
+    ("Pranamat ECO Massage Mat", 149.00, "Wellness", "https://www.amazon.com/s?k=Pranamat+ECO+Massage+Mat"),
+    ("Ancient Nutrition Multi Collagen", 49.95, "Wellness", "https://www.amazon.com/s?k=Ancient+Nutrition+Multi+Collagen"),
+    ("Meross Smart Plug Mini 4-Pack", 25.99, "Wellness", "https://www.amazon.com/s?k=Meross+Smart+Plug+Mini"),
+    ("RENPHO Eye Massager with Heat", 49.99, "Wellness", "https://www.amazon.com/s?k=RENPHO+Eye+Massager")
+  ];
+
+  public type VendorRequest = {
+    id : Nat;
+    vendorName : Text;
+    businessName : Text;
+    productName : Text;
+    category : Text;
+    description : Text;
+    price : Float;
+    websiteLink : Text;
+    contactEmail : Text;
+    status : Text; // "pending", "approved", "rejected"
+    submittedAt : Time.Time;
+  };
+
+  public type Order = {
+    id : Nat;
+    productName : Text;
+    memberIndex : Nat;
+    assignedMemberId : Text;
+    timestamp : Time.Time;
+  };
+
+  let autoPostCategories = List.empty<Text>();
+  let liveVisitors = Map.empty<Principal, Time.Time>();
+  let products = Map.empty<Nat, Product>();
+  let inventoryProducts = Map.empty<Nat, InventoryProduct>();
   let userProfiles = Map.empty<Principal, UserProfile>();
+  let vendorRequests = Map.empty<Nat, VendorRequest>();
+  let orders = Map.empty<Nat, Order>();
+
+  // State
+  var visitorCount : Nat = 0;
+  var liveVisitorCount : Nat = 0;
+  var nextProductId = 1;
+  var nextInventoryProductId = 1;
+  var nextVendorRequestId = 1;
+  var nextOrderId = 1;
+  var roundRobinIndex = 1;
   var siteSettings : SiteSettings = {
     siteTitle = "EarningBySurfing";
     announcementText = "Welcome to EarningBySurfing — your AI-powered affiliate platform!";
   };
+  let visitorTimeout : Int = 1_000_000_000 * 60 * 10;
 
   // Authorization
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  // Seed data
-  let seedProducts : [Product] = [
-    // Tech
-    {
-      title = "Sony WH-1000XM5 Noise-Cancelling Headphones";
-      description = "Industry-leading noise cancellation with 30-hour battery life and crystal-clear call quality.";
-      category = #tech;
-      imageUrl = "";
-      featured = true;
-      aiReview = "The Sony WH-1000XM5 sets a new standard for consumer audio. Its adaptive noise cancellation performs brilliantly in all environments, from busy offices to packed airports. Exceptional build quality and comfort make this a top-tier affiliate pick with consistent high conversions.";
-      qualityScore = 97;
-    },
-    {
-      title = "Apple AirTag 4-Pack Tracker";
-      description = "Precision finding with ultra-wideband technology. Never lose your belongings again.";
-      category = #tech;
-      imageUrl = "";
-      featured = true;
-      aiReview = "Apple AirTags continue to dominate the item-tracking category with seamless iOS integration and a massive Find My network. The 4-pack offers excellent value and sees strong repeat purchases. Highly recommended for tech-focused affiliate campaigns.";
-      qualityScore = 94;
-    },
-    {
-      title = "Anker 737 Power Bank 24000mAh";
-      description = "65W fast charging for laptops, phones, and tablets. Portable powerhouse for travelers and professionals.";
-      category = #tech;
-      imageUrl = "";
-      featured = false;
-      aiReview = "Anker's 737 Power Bank delivers on every promise — massive capacity, fast charging, and a reliable brand with strong customer trust. It consistently ranks among the top-selling portable chargers globally, making it a proven high-conversion affiliate product.";
-      qualityScore = 92;
-    },
-    {
-      title = "Logitech MX Master 3S Wireless Mouse";
-      description = "Ergonomic precision mouse with ultra-fast MagSpeed scrolling and 8K DPI sensor.";
-      category = #tech;
-      imageUrl = "";
-      featured = false;
-      aiReview = "The MX Master 3S is a productivity powerhouse loved by developers, designers, and remote workers alike. Its cross-device functionality and whisper-quiet clicks set it apart. This product has a loyal user base and excellent affiliate commission potential.";
-      qualityScore = 95;
-    },
-    // Lifestyle
-    {
-      title = "YETI Rambler 30 oz Travel Tumbler";
-      description = "Double-wall vacuum insulation keeps drinks hot or cold for hours. The gold standard in premium drinkware.";
-      category = #lifestyle;
-      imageUrl = "";
-      featured = true;
-      aiReview = "YETI's Rambler Tumbler has achieved near-cult status among outdoor enthusiasts and office professionals. Its superior insulation and rugged build justify the premium price, resulting in strong customer satisfaction and low return rates — ideal for affiliate promotion.";
-      qualityScore = 96;
-    },
-    {
-      title = "Kindle Paperwhite 16GB E-Reader";
-      description = "Waterproof, glare-free display with 3-month battery life. Carry your entire library anywhere.";
-      category = #lifestyle;
-      imageUrl = "";
-      featured = true;
-      aiReview = "The Kindle Paperwhite remains the definitive e-reader for millions worldwide. Its waterproof design, crisp display, and Amazon ecosystem integration drive consistent sales year-round. A perennial bestseller with outstanding affiliate commission history.";
-      qualityScore = 93;
-    },
-    {
-      title = "Nespresso Vertuo Next Coffee Machine";
-      description = "One-touch brewing with barcode-reading technology. Espresso and full cups from a single machine.";
-      category = #lifestyle;
-      imageUrl = "";
-      featured = false;
-      aiReview = "The Vertuo Next is a gateway product that drives long-term value through capsule subscriptions. Its sleek design and foolproof operation appeal to a wide demographic. Strong initial sale conversion combined with subscription upsell makes this a top lifestyle affiliate pick.";
-      qualityScore = 90;
-    },
-    {
-      title = "Osprey Farpoint 40 Travel Backpack";
-      description = "Carry-on compliant travel pack with integrated suspension and dedicated laptop sleeve.";
-      category = #lifestyle;
-      imageUrl = "";
-      featured = false;
-      aiReview = "Osprey's Farpoint 40 is the go-to choice for minimalist travelers and digital nomads. Its quality craftsmanship and carry-on dimensions make it highly sought-after in travel communities. Consistent 4.8-star ratings and strong community endorsements drive reliable affiliate conversions.";
-      qualityScore = 91;
-    },
-    // Wellness
-    {
-      title = "Theragun Prime Percussive Therapy Device";
-      description = "Professional-grade muscle treatment with 5 attachments and 16mm amplitude for deep tissue relief.";
-      category = #wellness;
-      imageUrl = "";
-      featured = true;
-      aiReview = "The Theragun Prime has revolutionized at-home recovery for athletes and office workers alike. Its quiet motor and clinical-grade efficacy have made it a household name in wellness. High average order value and strong repeat purchase potential make this an elite affiliate product.";
-      qualityScore = 98;
-    },
-    {
-      title = "Fitbit Charge 6 Advanced Fitness Tracker";
-      description = "Built-in GPS, heart rate monitoring, stress management, and Google integration in a sleek band.";
-      category = #wellness;
-      imageUrl = "";
-      featured = true;
-      aiReview = "The Fitbit Charge 6 bridges fitness tracking and smartwatch functionality at an accessible price point. Google integration and comprehensive health metrics appeal to health-conscious consumers. A reliable affiliate product with strong brand recognition and steady seasonal demand spikes.";
-      qualityScore = 89;
-    },
-    {
-      title = "Manduka PRO Yoga Mat 6mm";
-      description = "Lifetime guarantee yoga mat with unmatched cushioning and non-slip grip for all yoga styles.";
-      category = #wellness;
-      imageUrl = "";
-      featured = false;
-      aiReview = "The Manduka PRO is the premium choice for serious yoga practitioners and studio owners. Its lifetime guarantee and eco-certified materials command a loyal following willing to pay premium prices. Excellent for wellness-focused affiliate campaigns targeting mindful consumers.";
-      qualityScore = 88;
-    },
-    {
-      title = "Hydro Flask 32 oz Wide Mouth Water Bottle";
-      description = "TempShield insulation keeps cold 24hrs, hot 12hrs. Durable powder coat finish. BPA-free.";
-      category = #wellness;
-      imageUrl = "";
-      featured = false;
-      aiReview = "Hydro Flask has become synonymous with premium hydration, particularly among outdoor and wellness communities. The wide-mouth design and variety of color options drive gift purchases alongside personal use. A social-media-friendly product with outstanding organic affiliate reach.";
-      qualityScore = 93;
-    }
-  ];
-
-  // Init: seed products on first deploy
   func initProducts() {
     if (products.size() == 0) {
       for (p in seedProducts.vals()) {
@@ -187,7 +331,32 @@ actor {
     };
   };
 
+  func initInventory() {
+    if (inventoryProducts.size() == 0) {
+      for ((name, price, category, affiliateLink) in seedInventory.vals()) {
+        let id = nextInventoryProductId;
+        inventoryProducts.add(id, { id; name; price; category; affiliateLink });
+        nextInventoryProductId += 1;
+      };
+    };
+  };
+
   initProducts();
+  initInventory();
+
+  func updateLiveVisitors() {
+    let currentTime = Time.now();
+    let expiredThreshold = currentTime - visitorTimeout : Time.Time;
+    var activeCount : Nat = 0;
+    for ((principal, timestamp) in liveVisitors.entries()) {
+      if (timestamp < expiredThreshold) {
+        liveVisitors.remove(principal);
+      } else {
+        activeCount += 1;
+      };
+    };
+    liveVisitorCount := activeCount;
+  };
 
   // Helper function for admin enforcement
   func enforceAdmin(caller : Principal) {
@@ -203,26 +372,11 @@ actor {
     };
   };
 
-  // Visitor tracking helper
-  func updateLiveVisitors() {
-    let currentTime = Time.now();
-    let expiredThreshold = currentTime - visitorTimeout;
-    var activeCount : Nat = 0;
-    for ((principal, timestamp) in liveVisitors.entries()) {
-      if (timestamp < expiredThreshold) {
-        liveVisitors.remove(principal);
-      } else {
-        activeCount += 1;
-      };
-    };
-    liveVisitorCount := activeCount;
-  };
-
   // Product CRUD Operations (Admin only)
-  public shared ({ caller }) func createProduct(product : Product) : async ProductId {
+  public shared ({ caller }) func createProduct(originalProduct : Product) : async ProductId {
     enforceAdmin(caller);
     let productId = nextProductId;
-    products.add(productId, product);
+    products.add(productId, originalProduct);
     nextProductId += 1;
     productId;
   };
@@ -263,6 +417,47 @@ actor {
     nextProductId := 1;
   };
 
+  // InventoryProduct CRUD (Admin Only)
+  public shared ({ caller }) func addInventoryProduct(name : Text, price : Float, category : Text, affiliateLink : Text) : async Nat {
+    enforceAdmin(caller);
+    let id = nextInventoryProductId;
+    let newProduct : InventoryProduct = {
+      id;
+      name;
+      price;
+      category;
+      affiliateLink;
+    };
+    inventoryProducts.add(id, newProduct);
+    nextInventoryProductId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func updateInventoryProduct(id : Nat, name : Text, price : Float, category : Text, affiliateLink : Text) : async () {
+    enforceAdmin(caller);
+    if (inventoryProducts.containsKey(id)) {
+      let updatedProduct : InventoryProduct = {
+        id;
+        name;
+        price;
+        category;
+        affiliateLink;
+      };
+      inventoryProducts.add(id, updatedProduct);
+    } else {
+      Runtime.trap("Inventory product not found");
+    };
+  };
+
+  public shared ({ caller }) func deleteInventoryProduct(id : Nat) : async () {
+    enforceAdmin(caller);
+    inventoryProducts.remove(id);
+  };
+
+  public query func getAllInventoryProducts() : async [(Nat, InventoryProduct)] {
+    inventoryProducts.toArray();
+  };
+
   // Visitor Tracking
   public shared ({ caller }) func trackVisitor() : async () {
     visitorCount += 1;
@@ -299,7 +494,7 @@ actor {
       case (?existing) {
         { name = profile.name; joinDate = existing.joinDate; activityCount = existing.activityCount + 1 };
       };
-      case null {
+      case (null) {
         { name = profile.name; joinDate = Time.now(); activityCount = 1 };
       };
     };
@@ -310,7 +505,7 @@ actor {
     enforceMember(caller);
     switch (userProfiles.get(caller)) {
       case (?profile) { ?{ joinDate = profile.joinDate; activityCount = profile.activityCount } };
-      case null { null };
+      case (null) { null };
     };
   };
 
@@ -326,5 +521,121 @@ actor {
   public shared ({ caller }) func updateSiteSettings(newSettings : SiteSettings) : async () {
     enforceAdmin(caller);
     siteSettings := newSettings;
+  };
+
+  // Category Autosave Functions
+  public query func getAutoPostCategories() : async [Text] {
+    autoPostCategories.toArray();
+  };
+
+  public shared ({ caller }) func addAutoPostCategory(category : Text) : async () {
+    enforceAdmin(caller);
+    if (autoPostCategories.any(func(c) { c == category })) {
+      Runtime.trap("Category already exists in auto-post list");
+    };
+    autoPostCategories.add(category);
+  };
+
+  public shared ({ caller }) func removeAutoPostCategory(category : Text) : async () {
+    enforceAdmin(caller);
+
+    let initialSize = autoPostCategories.size();
+
+    // Remove category using persistent List's in-place filter
+    let filteredList = autoPostCategories.filter(
+      func(cat) { cat != category }
+    );
+    autoPostCategories.clear();
+    autoPostCategories.addAll(filteredList.values());
+
+    // Check if category was found and removed
+    if (autoPostCategories.size() == initialSize) {
+      Runtime.trap("Category not found in auto-post list");
+    };
+  };
+
+  public query func isCategoryAutoPosted(category : Text) : async Bool {
+    autoPostCategories.any(func(c) { c == category });
+  };
+
+  // Vendor Requests
+  public shared ({ caller }) func submitVendorRequest(newRequest : VendorRequest) : async Nat {
+    let id = nextVendorRequestId;
+    let request : VendorRequest = {
+      id;
+      vendorName = newRequest.vendorName;
+      businessName = newRequest.businessName;
+      productName = newRequest.productName;
+      category = newRequest.category;
+      description = newRequest.description;
+      price = newRequest.price;
+      websiteLink = newRequest.websiteLink;
+      contactEmail = newRequest.contactEmail;
+      status = "pending";
+      submittedAt = Time.now();
+    };
+    vendorRequests.add(id, request);
+    nextVendorRequestId += 1;
+    id;
+  };
+
+  public query ({ caller }) func getVendorRequests() : async [(Nat, VendorRequest)] {
+    enforceAdmin(caller);
+    vendorRequests.entries().toArray();
+  };
+
+  public shared ({ caller }) func updateVendorRequestStatus(id : Nat, status : Text) : async () {
+    enforceAdmin(caller);
+    if (vendorRequests.containsKey(id)) {
+      let request = vendorRequests.get(id);
+      switch (request) {
+        case (null) {
+          Runtime.trap("Vendor request not found for id " # id.toText());
+        };
+        case (?request) {
+          let updatedRequest = { request with status };
+          vendorRequests.add(id, updatedRequest);
+        };
+      };
+    };
+  };
+
+  // Orders
+  public shared ({ caller }) func submitOrder(productName : Text, totalMembers : Nat) : async Nat {
+    if (totalMembers == 0) {
+      Runtime.trap("No members available on platform");
+    };
+
+    let memberIndex = roundRobinIndex % totalMembers; // Start from 0
+
+    let id = nextOrderId;
+
+    let order : Order = {
+      id;
+      productName;
+      memberIndex;
+      assignedMemberId = memberIndex.toText();
+      timestamp = Time.now();
+    };
+    orders.add(id, order);
+
+    nextOrderId += 1;
+    roundRobinIndex += 1; // Always increment
+    memberIndex; // Return the assigned member index
+  };
+
+  public query ({ caller }) func getOrders() : async [(Nat, Order)] {
+    enforceAdmin(caller);
+    orders.entries().toArray();
+  };
+
+  public query ({ caller }) func getRoundRobinIndex() : async Nat {
+    enforceAdmin(caller);
+    roundRobinIndex; // Return 1-based index
+  };
+
+  public shared ({ caller }) func resetRoundRobinIndex() : async () {
+    enforceAdmin(caller);
+    roundRobinIndex := 1;
   };
 };

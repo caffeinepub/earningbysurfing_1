@@ -89,6 +89,44 @@ export class ExternalBlob {
         return this;
     }
 }
+export interface VendorRequest {
+    id: bigint;
+    websiteLink: string;
+    status: string;
+    businessName: string;
+    submittedAt: Time;
+    description: string;
+    productName: string;
+    contactEmail: string;
+    category: string;
+    price: number;
+    vendorName: string;
+}
+export type Time = bigint;
+export interface SiteSettings {
+    siteTitle: string;
+    announcementText: string;
+}
+export interface InventoryProduct {
+    id: bigint;
+    name: string;
+    category: string;
+    affiliateLink: string;
+    price: number;
+}
+export type ProductId = bigint;
+export interface Order {
+    id: bigint;
+    productName: string;
+    assignedMemberId: string;
+    timestamp: Time;
+    memberIndex: bigint;
+}
+export interface UserProfile {
+    joinDate: Time;
+    name: string;
+    activityCount: bigint;
+}
 export interface Product {
     title: string;
     featured: boolean;
@@ -97,17 +135,6 @@ export interface Product {
     imageUrl: string;
     category: Category;
     aiReview: string;
-}
-export interface SiteSettings {
-    siteTitle: string;
-    announcementText: string;
-}
-export type Time = bigint;
-export type ProductId = bigint;
-export interface UserProfile {
-    joinDate: Time;
-    name: string;
-    activityCount: bigint;
 }
 export enum Category {
     shoesAndClothes = "shoesAndClothes",
@@ -125,11 +152,16 @@ export enum UserRole {
 }
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
+    addAutoPostCategory(category: string): Promise<void>;
+    addInventoryProduct(name: string, price: number, category: string, affiliateLink: string): Promise<bigint>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    createProduct(product: Product): Promise<ProductId>;
+    createProduct(originalProduct: Product): Promise<ProductId>;
     deleteAllProducts(): Promise<void>;
+    deleteInventoryProduct(id: bigint): Promise<void>;
     deleteProduct(productId: bigint): Promise<void>;
+    getAllInventoryProducts(): Promise<Array<[bigint, InventoryProduct]>>;
     getAllProducts(): Promise<Array<[ProductId, Product]>>;
+    getAutoPostCategories(): Promise<Array<string>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getLiveVisitorCount(): Promise<bigint>;
@@ -137,17 +169,27 @@ export interface backendInterface {
         joinDate: Time;
         activityCount: bigint;
     } | null>;
+    getOrders(): Promise<Array<[bigint, Order]>>;
     getProduct(productId: bigint): Promise<Product | null>;
     getProductsByCategory(category: Category): Promise<Array<[ProductId, Product]>>;
+    getRoundRobinIndex(): Promise<bigint>;
     getSiteSettings(): Promise<SiteSettings>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    getVendorRequests(): Promise<Array<[bigint, VendorRequest]>>;
     getVisitorCount(): Promise<bigint>;
     isCallerAdmin(): Promise<boolean>;
+    isCategoryAutoPosted(category: string): Promise<boolean>;
     listAllUsers(): Promise<Array<[Principal, UserProfile]>>;
+    removeAutoPostCategory(category: string): Promise<void>;
+    resetRoundRobinIndex(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    submitOrder(productName: string, totalMembers: bigint): Promise<bigint>;
+    submitVendorRequest(newRequest: VendorRequest): Promise<bigint>;
     trackVisitor(): Promise<void>;
+    updateInventoryProduct(id: bigint, name: string, price: number, category: string, affiliateLink: string): Promise<void>;
     updateProduct(productId: bigint, product: Product): Promise<void>;
     updateSiteSettings(newSettings: SiteSettings): Promise<void>;
+    updateVendorRequestStatus(id: bigint, status: string): Promise<void>;
 }
 import type { Category as _Category, Product as _Product, ProductId as _ProductId, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -163,6 +205,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor._initializeAccessControlWithSecret(arg0);
+            return result;
+        }
+    }
+    async addAutoPostCategory(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addAutoPostCategory(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addAutoPostCategory(arg0);
+            return result;
+        }
+    }
+    async addInventoryProduct(arg0: string, arg1: number, arg2: string, arg3: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addInventoryProduct(arg0, arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addInventoryProduct(arg0, arg1, arg2, arg3);
             return result;
         }
     }
@@ -208,6 +278,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async deleteInventoryProduct(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteInventoryProduct(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteInventoryProduct(arg0);
+            return result;
+        }
+    }
     async deleteProduct(arg0: bigint): Promise<void> {
         if (this.processError) {
             try {
@@ -219,6 +303,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.deleteProduct(arg0);
+            return result;
+        }
+    }
+    async getAllInventoryProducts(): Promise<Array<[bigint, InventoryProduct]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllInventoryProducts();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllInventoryProducts();
             return result;
         }
     }
@@ -234,6 +332,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getAllProducts();
             return from_candid_vec_n7(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAutoPostCategories(): Promise<Array<string>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAutoPostCategories();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAutoPostCategories();
+            return result;
         }
     }
     async getCallerUserProfile(): Promise<UserProfile | null> {
@@ -295,6 +407,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getOrders(): Promise<Array<[bigint, Order]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getOrders();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getOrders();
+            return result;
+        }
+    }
     async getProduct(arg0: bigint): Promise<Product | null> {
         if (this.processError) {
             try {
@@ -321,6 +447,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getProductsByCategory(to_candid_Category_n5(this._uploadFile, this._downloadFile, arg0));
             return from_candid_vec_n7(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getRoundRobinIndex(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getRoundRobinIndex();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getRoundRobinIndex();
+            return result;
         }
     }
     async getSiteSettings(): Promise<SiteSettings> {
@@ -351,6 +491,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getVendorRequests(): Promise<Array<[bigint, VendorRequest]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getVendorRequests();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getVendorRequests();
+            return result;
+        }
+    }
     async getVisitorCount(): Promise<bigint> {
         if (this.processError) {
             try {
@@ -379,6 +533,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async isCategoryAutoPosted(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isCategoryAutoPosted(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isCategoryAutoPosted(arg0);
+            return result;
+        }
+    }
     async listAllUsers(): Promise<Array<[Principal, UserProfile]>> {
         if (this.processError) {
             try {
@@ -390,6 +558,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.listAllUsers();
+            return result;
+        }
+    }
+    async removeAutoPostCategory(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeAutoPostCategory(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeAutoPostCategory(arg0);
+            return result;
+        }
+    }
+    async resetRoundRobinIndex(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.resetRoundRobinIndex();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.resetRoundRobinIndex();
             return result;
         }
     }
@@ -407,6 +603,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async submitOrder(arg0: string, arg1: bigint): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.submitOrder(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.submitOrder(arg0, arg1);
+            return result;
+        }
+    }
+    async submitVendorRequest(arg0: VendorRequest): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.submitVendorRequest(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.submitVendorRequest(arg0);
+            return result;
+        }
+    }
     async trackVisitor(): Promise<void> {
         if (this.processError) {
             try {
@@ -418,6 +642,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.trackVisitor();
+            return result;
+        }
+    }
+    async updateInventoryProduct(arg0: bigint, arg1: string, arg2: number, arg3: string, arg4: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateInventoryProduct(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateInventoryProduct(arg0, arg1, arg2, arg3, arg4);
             return result;
         }
     }
@@ -446,6 +684,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateSiteSettings(arg0);
+            return result;
+        }
+    }
+    async updateVendorRequestStatus(arg0: bigint, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateVendorRequestStatus(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateVendorRequestStatus(arg0, arg1);
             return result;
         }
     }

@@ -17,6 +17,20 @@ export type Category = { 'shoesAndClothes' : null } |
   { 'wellness' : null } |
   { 'books' : null } |
   { 'lifestyle' : null };
+export interface InventoryProduct {
+  'id' : bigint,
+  'name' : string,
+  'category' : string,
+  'affiliateLink' : string,
+  'price' : number,
+}
+export interface Order {
+  'id' : bigint,
+  'productName' : string,
+  'assignedMemberId' : string,
+  'timestamp' : Time,
+  'memberIndex' : bigint,
+}
 export interface Product {
   'title' : string,
   'featured' : boolean,
@@ -40,13 +54,34 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface VendorRequest {
+  'id' : bigint,
+  'websiteLink' : string,
+  'status' : string,
+  'businessName' : string,
+  'submittedAt' : Time,
+  'description' : string,
+  'productName' : string,
+  'contactEmail' : string,
+  'category' : string,
+  'price' : number,
+  'vendorName' : string,
+}
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addAutoPostCategory' : ActorMethod<[string], undefined>,
+  'addInventoryProduct' : ActorMethod<[string, number, string, string], bigint>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createProduct' : ActorMethod<[Product], ProductId>,
   'deleteAllProducts' : ActorMethod<[], undefined>,
+  'deleteInventoryProduct' : ActorMethod<[bigint], undefined>,
   'deleteProduct' : ActorMethod<[bigint], undefined>,
+  'getAllInventoryProducts' : ActorMethod<
+    [],
+    Array<[bigint, InventoryProduct]>
+  >,
   'getAllProducts' : ActorMethod<[], Array<[ProductId, Product]>>,
+  'getAutoPostCategories' : ActorMethod<[], Array<string>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getLiveVisitorCount' : ActorMethod<[], bigint>,
@@ -54,20 +89,33 @@ export interface _SERVICE {
     [],
     [] | [{ 'joinDate' : Time, 'activityCount' : bigint }]
   >,
+  'getOrders' : ActorMethod<[], Array<[bigint, Order]>>,
   'getProduct' : ActorMethod<[bigint], [] | [Product]>,
   'getProductsByCategory' : ActorMethod<
     [Category],
     Array<[ProductId, Product]>
   >,
+  'getRoundRobinIndex' : ActorMethod<[], bigint>,
   'getSiteSettings' : ActorMethod<[], SiteSettings>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getVendorRequests' : ActorMethod<[], Array<[bigint, VendorRequest]>>,
   'getVisitorCount' : ActorMethod<[], bigint>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isCategoryAutoPosted' : ActorMethod<[string], boolean>,
   'listAllUsers' : ActorMethod<[], Array<[Principal, UserProfile]>>,
+  'removeAutoPostCategory' : ActorMethod<[string], undefined>,
+  'resetRoundRobinIndex' : ActorMethod<[], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'submitOrder' : ActorMethod<[string, bigint], bigint>,
+  'submitVendorRequest' : ActorMethod<[VendorRequest], bigint>,
   'trackVisitor' : ActorMethod<[], undefined>,
+  'updateInventoryProduct' : ActorMethod<
+    [bigint, string, number, string, string],
+    undefined
+  >,
   'updateProduct' : ActorMethod<[bigint, Product], undefined>,
   'updateSiteSettings' : ActorMethod<[SiteSettings], undefined>,
+  'updateVendorRequestStatus' : ActorMethod<[bigint, string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

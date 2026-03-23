@@ -7,11 +7,14 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
+import { LanguageProvider } from "./contexts/LanguageContext";
 import AdminPage from "./pages/AdminPage";
 import DashboardPage from "./pages/DashboardPage";
 import HomePage from "./pages/HomePage";
+import VendorPage from "./pages/VendorPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,11 +50,17 @@ const adminRoute = createRoute({
   path: "/admin",
   component: AdminPage,
 });
+const vendorRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/vendor",
+  component: VendorPage,
+});
 
 const routeTree = rootRoute.addChildren([
   homeRoute,
   dashboardRoute,
   adminRoute,
+  vendorRoute,
 ]);
 const router = createRouter({ routeTree });
 
@@ -62,10 +71,18 @@ declare module "@tanstack/react-router" {
 }
 
 export default function App() {
+  useEffect(() => {
+    const handler = (e: MouseEvent) => e.preventDefault();
+    document.addEventListener("contextmenu", handler);
+    return () => document.removeEventListener("contextmenu", handler);
+  }, []);
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-      <Toaster richColors position="top-right" />
-    </QueryClientProvider>
+    <LanguageProvider>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+        <Toaster richColors position="top-right" />
+      </QueryClientProvider>
+    </LanguageProvider>
   );
 }

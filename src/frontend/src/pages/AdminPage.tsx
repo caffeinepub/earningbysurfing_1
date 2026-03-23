@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -28,30 +29,51 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  CheckCircle,
+  DollarSign,
+  Flame,
+  Globe,
   LayoutDashboard,
   Loader2,
   Package,
   Plus,
   Save,
   Settings,
+  ShoppingBag,
+  Store,
   Trash2,
+  Upload,
   Users,
+  Users2,
+  XCircle,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Product } from "../backend";
+import { SAMPLE_INVENTORY_PRODUCTS } from "../data/sampleInventoryProducts";
+import { useActor } from "../hooks/useActor";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
   Category,
+  useAddAutoPostCategory,
+  useAddInventoryProduct,
+  useAllInventoryProducts,
   useAllProducts,
+  useAutoPostCategories,
   useCreateProduct,
+  useDeleteInventoryProduct,
   useDeleteProduct,
   useIsAdmin,
   useListAllUsers,
   useLiveVisitorCount,
+  useOrders,
+  useRemoveAutoPostCategory,
+  useRoundRobinIndex,
   useSiteSettings,
   useUpdateSiteSettings,
+  useUpdateVendorRequestStatus,
+  useVendorRequests,
   useVisitorCount,
 } from "../hooks/useQueries";
 
@@ -62,7 +84,623 @@ const CATEGORY_OPTIONS = [
   { value: Category.books, label: "Books" },
 ];
 
-type AdminSection = "dashboard" | "products" | "users" | "settings";
+type AdminSection =
+  | "dashboard"
+  | "products"
+  | "users"
+  | "settings"
+  | "members"
+  | "payouts"
+  | "globalInsights"
+  | "inventory"
+  | "vendorRequests"
+  | "orders";
+
+interface ImportedMember {
+  id: number;
+  name: string;
+  email: string;
+  gender: string;
+  commission: number;
+  status: "Pending" | "Paid";
+}
+
+const GLOBAL_TRENDS = [
+  {
+    rank: 1,
+    category: "AI Tech",
+    region: "USA & Europe",
+    margin: "12-18%",
+    description:
+      "AI-powered gadgets, wearables and productivity tools driving record affiliate conversions globally.",
+    supplierSearch: "https://www.amazon.com/s?k=AI+tech+gadgets",
+  },
+  {
+    rank: 2,
+    category: "Organic Wellness",
+    region: "USA & Europe",
+    margin: "15-22%",
+    description:
+      "Supplements, adaptogens, and clean-label health products with massive DTC growth.",
+    supplierSearch: "https://www.clickbank.com/marketplace/?category=health",
+  },
+  {
+    rank: 3,
+    category: "Eco-Decor",
+    region: "Europe",
+    margin: "10-16%",
+    description:
+      "Sustainable home décor and eco-friendly furnishings surging as green living trends accelerate.",
+    supplierSearch: "https://www.amazon.com/s?k=eco+friendly+home+decor",
+  },
+  {
+    rank: 4,
+    category: "Smart Kitchen",
+    region: "USA & Europe",
+    margin: "11-17%",
+    description:
+      "Connected kitchen appliances and smart cooking tools with strong gifting season demand.",
+    supplierSearch: "https://www.amazon.com/s?k=smart+kitchen+gadgets",
+  },
+  {
+    rank: 5,
+    category: "Solar Power",
+    region: "Europe",
+    margin: "14-20%",
+    description:
+      "Portable solar panels and home energy kits surging due to rising energy costs and eco policy.",
+    supplierSearch: "https://www.amazon.com/s?k=solar+power+portable",
+  },
+  {
+    rank: 6,
+    category: "Leather Goods",
+    region: "USA & Europe",
+    margin: "18-25%",
+    description:
+      "Premium leather bags, wallets, and accessories with high average order values.",
+    supplierSearch: "https://www.amazon.com/s?k=leather+goods+premium",
+  },
+  {
+    rank: 7,
+    category: "Pet Tech",
+    region: "USA",
+    margin: "13-19%",
+    description:
+      "Smart feeders, GPS trackers, and health monitors for pets — a multi-billion dollar affiliate category.",
+    supplierSearch: "https://www.amazon.com/s?k=pet+tech+gadgets",
+  },
+  {
+    rank: 8,
+    category: "Digital Tools",
+    region: "USA & Europe",
+    margin: "20-30%",
+    description:
+      "Software, SaaS subscriptions, and productivity apps with recurring commission potential.",
+    supplierSearch:
+      "https://www.clickbank.com/marketplace/?category=software_services",
+  },
+  {
+    rank: 9,
+    category: "Yoga Kits",
+    region: "USA & Europe",
+    margin: "10-15%",
+    description:
+      "Premium yoga mats, blocks, straps, and starter bundles with strong wellness community demand.",
+    supplierSearch: "https://www.amazon.com/s?k=yoga+kit+set",
+  },
+  {
+    rank: 10,
+    category: "Skincare",
+    region: "Europe",
+    margin: "16-24%",
+    description:
+      "Clean beauty and dermatologist-backed skincare driving high repeat purchases and subscriptions.",
+    supplierSearch: "https://www.clickbank.com/marketplace/?category=health",
+  },
+];
+
+// ─── Product Inventory Section ───────────────────────────────────────────────
+function ProductInventorySection() {
+  const { data: products = [], isLoading } = useAllInventoryProducts();
+  const addProduct = useAddInventoryProduct();
+  const deleteProduct = useDeleteInventoryProduct();
+  const { actor } = useActor();
+  const [seeding, setSeeding] = useState(false);
+
+  async function handleSeedProducts() {
+    if (!actor) {
+      toast.error("Not connected.");
+      return;
+    }
+    setSeeding(true);
+    try {
+      await Promise.all(
+        SAMPLE_INVENTORY_PRODUCTS.map((p) =>
+          actor.addInventoryProduct(
+            p.name,
+            p.price,
+            p.category,
+            p.affiliateLink,
+          ),
+        ),
+      );
+      toast.success("100 sample products seeded successfully!");
+    } catch {
+      toast.error("Failed to seed some products.");
+    } finally {
+      setSeeding(false);
+    }
+  }
+
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [category, setCategory] = useState("Tech");
+  const [affiliateLink, setAffiliateLink] = useState("");
+
+  const INVENTORY_CATEGORIES = [
+    "Tech",
+    "Lifestyle",
+    "Wellness",
+    "Home",
+    "Fashion",
+    "Sports",
+    "Beauty",
+    "Other",
+  ];
+
+  function handleAdd() {
+    const trimmedName = name.trim();
+    const trimmedLink = affiliateLink.trim();
+    const parsedPrice = Number.parseFloat(price);
+    if (!trimmedName || !price || Number.isNaN(parsedPrice) || !trimmedLink) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+    addProduct.mutate(
+      {
+        name: trimmedName,
+        price: parsedPrice,
+        category,
+        affiliateLink: trimmedLink,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Product added to inventory!");
+          setName("");
+          setPrice("");
+          setCategory("Tech");
+          setAffiliateLink("");
+        },
+        onError: () => toast.error("Failed to add product."),
+      },
+    );
+  }
+
+  function handleDelete(id: bigint) {
+    deleteProduct.mutate(id, {
+      onSuccess: () => toast.success("Product deleted."),
+      onError: () => toast.error("Failed to delete product."),
+    });
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      data-ocid="inventory.section"
+    >
+      <h2 className="text-2xl font-black uppercase tracking-wide text-saffron mb-6">
+        Product Inventory
+      </h2>
+
+      {/* Add Product Form */}
+      <Card className="shadow-card mb-8" data-ocid="inventory.panel">
+        <CardHeader>
+          <CardTitle className="text-sm uppercase tracking-widest text-saffron">
+            Add New Product
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-1 block">
+                Product Name
+              </Label>
+              <Input
+                placeholder="e.g. Anker PowerCore 26800"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="border-[#FF9933]/40 focus-visible:ring-[#FF9933]"
+                data-ocid="inventory.input"
+              />
+            </div>
+            <div>
+              <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-1 block">
+                Price (USD)
+              </Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 49.99"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="border-[#FF9933]/40 focus-visible:ring-[#FF9933]"
+                data-ocid="inventory.price.input"
+              />
+            </div>
+            <div>
+              <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-1 block">
+                Category
+              </Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger
+                  className="border-[#FF9933]/40 focus:ring-[#FF9933]"
+                  data-ocid="inventory.select"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {INVENTORY_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-1 block">
+                Affiliate Link
+              </Label>
+              <Input
+                type="url"
+                placeholder="https://amzn.to/..."
+                value={affiliateLink}
+                onChange={(e) => setAffiliateLink(e.target.value)}
+                className="border-[#FF9933]/40 focus-visible:ring-[#FF9933]"
+                data-ocid="inventory.link.input"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-3 mt-4 flex-wrap">
+            <Button
+              className="bg-[#FF9933] text-white hover:bg-[#e6882e] font-bold uppercase tracking-widest text-xs"
+              onClick={handleAdd}
+              disabled={addProduct.isPending}
+              data-ocid="inventory.primary_button"
+            >
+              {addProduct.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" /> Add Product
+                </>
+              )}
+            </Button>
+            {products.length === 0 && (
+              <Button
+                variant="outline"
+                className="border-[#FF9933] text-[#FF9933] hover:bg-[#FF9933] hover:text-white font-bold uppercase tracking-widest text-xs"
+                onClick={handleSeedProducts}
+                disabled={seeding || !actor}
+                data-ocid="inventory.secondary_button"
+              >
+                {seeding ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Seeding...
+                  </>
+                ) : (
+                  <>
+                    <Package className="mr-2 h-4 w-4" /> Seed 100 Sample
+                    Products
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Products Table */}
+      <Card className="shadow-card" data-ocid="inventory.table">
+        <CardHeader className="bg-[#FF9933] rounded-t-lg">
+          <CardTitle className="text-sm uppercase tracking-widest text-white flex items-center justify-between">
+            <span>All Products</span>
+            <Badge className="bg-white text-[#FF9933] font-black text-xs">
+              {products.length} / 100
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-6 space-y-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
+          ) : products.length === 0 ? (
+            <div
+              className="p-12 text-center text-muted-foreground text-sm"
+              data-ocid="inventory.empty_state"
+            >
+              No products yet. Add your first product above.
+            </div>
+          ) : (
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+              <Table>
+                <TableHeader className="sticky top-0 bg-white z-10">
+                  <TableRow className="border-b border-[#FF9933]/20">
+                    <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest w-12">
+                      #
+                    </TableHead>
+                    <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest">
+                      Name
+                    </TableHead>
+                    <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest">
+                      Price
+                    </TableHead>
+                    <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest">
+                      Category
+                    </TableHead>
+                    <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest">
+                      Affiliate Link
+                    </TableHead>
+                    <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest w-16">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {products.map(([id, product], index) => (
+                    <TableRow
+                      key={id.toString()}
+                      className="hover:bg-[#FF9933]/5 border-b border-[#FF9933]/10"
+                      data-ocid={`inventory.item.${index + 1}`}
+                    >
+                      <TableCell className="text-xs text-muted-foreground font-mono">
+                        {index + 1}
+                      </TableCell>
+                      <TableCell className="font-semibold text-sm text-foreground">
+                        {product.name}
+                      </TableCell>
+                      <TableCell className="text-sm font-bold text-[#FF9933]">
+                        ${product.price.toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-[#FF9933]/10 text-[#FF9933] border border-[#FF9933]/30 text-xs font-semibold">
+                          {product.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <a
+                          href={product.affiliateLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#FF9933] hover:underline text-xs font-mono"
+                        >
+                          {product.affiliateLink.length > 30
+                            ? `${product.affiliateLink.slice(0, 30)}...`
+                            : product.affiliateLink}
+                        </a>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 p-1 h-7 w-7"
+                          onClick={() => handleDelete(id)}
+                          disabled={deleteProduct.isPending}
+                          data-ocid={`inventory.delete_button.${index + 1}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+// ─── Global Insights Section ─────────────────────────────────────────────────
+function GlobalInsightsSection() {
+  const { data: autoPosted = [], isLoading: apLoading } =
+    useAutoPostCategories();
+  const {
+    mutate: addPost,
+    isPending: addPending,
+    variables: addVar,
+  } = useAddAutoPostCategory();
+  const {
+    mutate: removePost,
+    isPending: removePending,
+    variables: removeVar,
+  } = useRemoveAutoPostCategory();
+
+  type MarketFilter = "Global" | "USA" | "EU";
+  const [activeFilter, setActiveFilter] = useState<MarketFilter>("Global");
+
+  const filteredTrends = GLOBAL_TRENDS.filter((t) => {
+    if (activeFilter === "USA") return t.region.includes("USA");
+    if (activeFilter === "EU") return t.region.includes("Europe");
+    return true;
+  });
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <div className="flex items-center gap-3 mb-2">
+        <Globe className="h-6 w-6 text-saffron" />
+        <h2 className="text-2xl font-black uppercase tracking-wide text-saffron">
+          Global Insights
+        </h2>
+      </div>
+      <p className="text-sm text-muted-foreground normal-case mb-4">
+        Top 10 trending product categories from the USA and Europe. Click
+        Auto-Post to feature a category on the Home Page.
+      </p>
+
+      {/* Active Listings Count Badge */}
+      <div className="flex items-center gap-3 mb-5">
+        <div
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm shadow"
+          style={{ backgroundColor: "#FF9933", color: "#fff" }}
+        >
+          <span className="text-lg font-black">{autoPosted.length}</span>
+          <span className="uppercase tracking-widest text-xs">
+            Active Listings on Home Page
+          </span>
+        </div>
+      </div>
+
+      {/* Market Filter Buttons */}
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {(["Global", "USA", "EU"] as MarketFilter[]).map((f) => {
+          const labels: Record<MarketFilter, string> = {
+            Global: "Global",
+            USA: "US Market",
+            EU: "EU Market",
+          };
+          const isActive = activeFilter === f;
+          return (
+            <button
+              key={f}
+              onClick={() => setActiveFilter(f)}
+              data-ocid="insights.tab"
+              type="button"
+              className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border-2 transition-all"
+              style={
+                isActive
+                  ? {
+                      backgroundColor: "#FF9933",
+                      borderColor: "#FF9933",
+                      color: "#fff",
+                    }
+                  : {
+                      backgroundColor: "#fff",
+                      borderColor: "#FF9933",
+                      color: "#FF9933",
+                    }
+              }
+            >
+              {labels[f]}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {filteredTrends.map((trend) => {
+          const isPosted = autoPosted.includes(trend.category);
+          const isAddingThis = addPending && addVar === trend.category;
+          const isRemovingThis = removePending && removeVar === trend.category;
+          const isMutating = isAddingThis || isRemovingThis;
+
+          return (
+            <Card
+              key={trend.rank}
+              className="shadow-card border border-saffron/10 hover:border-saffron/40 transition-colors"
+            >
+              <CardContent className="pt-5 pb-5">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  {/* Rank badge + region */}
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 font-black text-sm"
+                      style={{ backgroundColor: "#FF9933", color: "#fff" }}
+                    >
+                      {trend.rank}
+                    </div>
+                    <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                      {trend.region}
+                    </span>
+                  </div>
+                  {/* Hot badge */}
+                  <Badge
+                    className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 border-0"
+                    style={{ backgroundColor: "#FF9933", color: "#fff" }}
+                  >
+                    <Flame className="h-3 w-3" />
+                    Hot
+                  </Badge>
+                </div>
+
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <h3 className="text-base font-black uppercase tracking-wide text-foreground">
+                    {trend.category}
+                  </h3>
+                  {/* Potential Margin tag */}
+                  <span
+                    className="text-xs font-bold px-2 py-0.5 rounded-full"
+                    style={{
+                      backgroundColor: "#FF993320",
+                      color: "#FF9933",
+                      border: "1px solid #FF993360",
+                    }}
+                  >
+                    {trend.margin} Margin
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground normal-case leading-relaxed mb-4">
+                  {trend.description}
+                </p>
+
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs font-bold uppercase tracking-wider border-saffron text-saffron hover:bg-saffron/10 flex-1"
+                    onClick={() => window.open(trend.supplierSearch, "_blank")}
+                    data-ocid={`insights.item.${trend.rank}`}
+                  >
+                    Find Suppliers
+                  </Button>
+
+                  {isPosted ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs font-bold uppercase tracking-wider border-muted text-muted-foreground hover:bg-muted/20 flex-1"
+                      onClick={() => removePost(trend.category)}
+                      disabled={isMutating || apLoading}
+                      data-ocid={`insights.delete_button.${trend.rank}`}
+                    >
+                      {isRemovingThis ? (
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      ) : null}
+                      Remove Post
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="text-xs font-bold uppercase tracking-wider flex-1"
+                      style={{ backgroundColor: "#FF9933", color: "#fff" }}
+                      onClick={() => addPost(trend.category)}
+                      disabled={isMutating || apLoading}
+                      data-ocid={`insights.primary_button.${trend.rank}`}
+                    >
+                      {isAddingThis ? (
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      ) : null}
+                      Auto-Post
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
 
 function AddProductDialog({ onClose }: { onClose: () => void }) {
   const { mutate: createProduct, isPending } = useCreateProduct();
@@ -190,11 +828,827 @@ function AddProductDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ─── Members Section ────────────────────────────────────────────────────────
+function MembersSection({
+  members,
+  setMembers,
+}: {
+  members: ImportedMember[];
+  setMembers: React.Dispatch<React.SetStateAction<ImportedMember[]>>;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<ImportedMember[]>([]);
+  const [parsed, setParsed] = useState<ImportedMember[]>([]);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const lines = text.split("\n").filter((l) => l.trim());
+      const dataLines = lines[0]?.toLowerCase().includes("name")
+        ? lines.slice(1)
+        : lines;
+      const rows: ImportedMember[] = dataLines.map((line, idx) => {
+        const cols = line.split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
+        return {
+          id: idx + 1,
+          name: cols[0] ?? "",
+          email: cols[1] ?? "",
+          gender: cols[2] ?? "",
+          commission: Number.parseFloat(cols[3] ?? "0") || 0,
+          status: "Pending",
+        };
+      });
+      setParsed(rows);
+      setPreview(rows.slice(0, 10));
+    };
+    reader.readAsText(file);
+  };
+
+  const handleImport = () => {
+    if (!parsed.length) return;
+    setMembers(parsed);
+    localStorage.setItem("ebs_members", JSON.stringify(parsed));
+    setParsed([]);
+    setPreview([]);
+    setPage(1);
+    if (fileRef.current) fileRef.current.value = "";
+    toast.success(
+      `${parsed.length} members imported successfully! Member data saved.`,
+    );
+  };
+
+  const filtered = members.filter(
+    (m) =>
+      m.name.toLowerCase().includes(search.toLowerCase()) ||
+      m.email.toLowerCase().includes(search.toLowerCase()) ||
+      m.gender.toLowerCase().includes(search.toLowerCase()),
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageSlice = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <h2 className="text-2xl font-black uppercase tracking-wide text-saffron mb-6">
+        Members
+      </h2>
+
+      <Card className="shadow-card mb-6">
+        <CardHeader>
+          <CardTitle className="text-sm uppercase tracking-widest text-saffron">
+            Bulk CSV Upload
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-muted-foreground normal-case">
+            Upload a CSV file with columns:{" "}
+            <span className="font-mono font-bold">
+              name, email, gender, commission
+            </span>
+          </p>
+          <button
+            type="button"
+            className="border-2 border-dashed border-saffron/40 rounded-lg p-8 flex flex-col items-center gap-3 hover:border-saffron/70 transition-colors cursor-pointer w-full"
+            onClick={() => fileRef.current?.click()}
+            data-ocid="members.dropzone"
+          >
+            <Upload className="h-8 w-8 text-saffron/60" />
+            <p className="text-sm font-bold uppercase tracking-widest text-saffron/70">
+              Click to select CSV file
+            </p>
+            <p className="text-xs text-muted-foreground normal-case">
+              Supports up to 4000+ members
+            </p>
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv"
+            className="hidden"
+            onChange={handleFile}
+            data-ocid="members.upload_button"
+          />
+          {parsed.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Badge className="bg-saffron text-white font-bold px-3 py-1">
+                  {parsed.length.toLocaleString()} members ready to import
+                </Badge>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-widest font-bold text-muted-foreground mb-2">
+                  Preview (first 10 rows)
+                </p>
+                <div className="overflow-x-auto rounded border border-border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="text-xs uppercase tracking-widest">
+                          Name
+                        </TableHead>
+                        <TableHead className="text-xs uppercase tracking-widest">
+                          Email
+                        </TableHead>
+                        <TableHead className="text-xs uppercase tracking-widest">
+                          Gender
+                        </TableHead>
+                        <TableHead className="text-xs uppercase tracking-widest">
+                          Commission
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {preview.map((row, i) => (
+                        <TableRow key={row.email || `preview-${i}`}>
+                          <TableCell className="normal-case text-sm font-medium">
+                            {row.name}
+                          </TableCell>
+                          <TableCell className="normal-case text-xs text-muted-foreground">
+                            {row.email}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            {row.gender}
+                          </TableCell>
+                          <TableCell className="text-xs font-bold text-saffron">
+                            ${row.commission.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+              <Button
+                className="bg-saffron text-white font-bold uppercase tracking-widest text-xs w-full"
+                onClick={handleImport}
+                data-ocid="members.submit_button"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Import {parsed.length.toLocaleString()} Members
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {members.length > 0 && (
+        <Card className="shadow-card">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm uppercase tracking-widest text-saffron">
+              All Members
+              <Badge className="ml-3 bg-saffron/10 text-saffron border border-saffron/30">
+                {members.length.toLocaleString()}
+              </Badge>
+            </CardTitle>
+            <Input
+              placeholder="Search members..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="max-w-xs"
+              data-ocid="members.search_input"
+            />
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table data-ocid="members.table">
+                <TableHeader>
+                  <TableRow className="bg-muted/30">
+                    <TableHead className="text-xs uppercase tracking-widest">
+                      #
+                    </TableHead>
+                    <TableHead className="text-xs uppercase tracking-widest">
+                      Name
+                    </TableHead>
+                    <TableHead className="text-xs uppercase tracking-widest">
+                      Email
+                    </TableHead>
+                    <TableHead className="text-xs uppercase tracking-widest">
+                      Gender
+                    </TableHead>
+                    <TableHead className="text-xs uppercase tracking-widest">
+                      Commission
+                    </TableHead>
+                    <TableHead className="text-xs uppercase tracking-widest">
+                      Status
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pageSlice.length > 0 ? (
+                    pageSlice.map((m, i) => (
+                      <TableRow
+                        key={`member-${(page - 1) * PAGE_SIZE + i}`}
+                        data-ocid={`members.row.${i + 1}`}
+                      >
+                        <TableCell className="text-xs text-muted-foreground">
+                          {(page - 1) * PAGE_SIZE + i + 1}
+                        </TableCell>
+                        <TableCell className="font-semibold normal-case text-sm">
+                          {m.name}
+                        </TableCell>
+                        <TableCell className="text-xs normal-case text-muted-foreground">
+                          {m.email}
+                        </TableCell>
+                        <TableCell className="text-xs capitalize">
+                          {m.gender}
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-saffron">
+                          ${m.commission.toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={
+                              m.status === "Pending"
+                                ? "bg-saffron/10 text-saffron border border-saffron/30 text-xs"
+                                : "bg-muted text-muted-foreground border border-border text-xs"
+                            }
+                          >
+                            Active
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className="text-center py-8 text-muted-foreground"
+                        data-ocid="members.empty_state"
+                      >
+                        No members match your search.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                <p className="text-xs text-muted-foreground normal-case">
+                  Showing {(page - 1) * PAGE_SIZE + 1}–
+                  {Math.min(page * PAGE_SIZE, filtered.length)} of{" "}
+                  {filtered.length.toLocaleString()}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    data-ocid="members.pagination_prev"
+                  >
+                    Prev
+                  </Button>
+                  <span className="text-xs font-bold flex items-center px-2">
+                    {page} / {totalPages}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    data-ocid="members.pagination_next"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {members.length === 0 && parsed.length === 0 && (
+        <div
+          className="text-center py-16 text-muted-foreground"
+          data-ocid="members.empty_state"
+        >
+          <Users2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
+          <p className="text-sm normal-case">
+            No members imported yet. Upload a CSV file to get started.
+          </p>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── Payouts Section ────────────────────────────────────────────────────────
+function PayoutsSection({
+  members,
+  setMembers,
+}: {
+  members: ImportedMember[];
+  setMembers: React.Dispatch<React.SetStateAction<ImportedMember[]>>;
+}) {
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+
+  const totalMembers = members.length;
+  const totalPending = members
+    .filter((m) => m.status === "Pending")
+    .reduce((sum, m) => sum + m.commission, 0);
+  const totalPaid = members
+    .filter((m) => m.status === "Paid")
+    .reduce((sum, m) => sum + m.commission, 0);
+
+  const markPaid = (idx: number) => {
+    setMembers((prev) =>
+      prev.map((m, i) => (i === idx ? { ...m, status: "Paid" } : m)),
+    );
+  };
+
+  const payAllPending = () => {
+    setMembers((prev) => prev.map((m) => ({ ...m, status: "Paid" })));
+    toast.success("All pending commissions marked as paid!");
+  };
+
+  const filtered = members.filter(
+    (m) =>
+      m.name.toLowerCase().includes(search.toLowerCase()) ||
+      m.email.toLowerCase().includes(search.toLowerCase()),
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageSlice = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const getGlobalIndex = (filteredIdx: number) => {
+    const member = filtered[(page - 1) * PAGE_SIZE + filteredIdx];
+    return members.indexOf(member);
+  };
+
+  const summaryCards = [
+    {
+      label: "Total Members",
+      value: totalMembers.toLocaleString(),
+      icon: Users2,
+    },
+    {
+      label: "Total Pending",
+      value: `$${totalPending.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+      icon: DollarSign,
+    },
+    {
+      label: "Total Paid Out",
+      value: `$${totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+      icon: DollarSign,
+    },
+  ];
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <h2 className="text-2xl font-black uppercase tracking-wide text-saffron">
+          Payout Tracker
+        </h2>
+        {members.some((m) => m.status === "Pending") && (
+          <Button
+            className="bg-saffron text-white font-bold uppercase tracking-widest text-xs"
+            onClick={payAllPending}
+            data-ocid="payouts.primary_button"
+          >
+            <DollarSign className="h-4 w-4 mr-2" />
+            Pay All Pending
+          </Button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        {summaryCards.map((card) => (
+          <Card key={card.label} className="shadow-card">
+            <CardContent className="pt-5 flex items-center gap-4">
+              <div className="h-10 w-10 rounded-full bg-saffron/10 flex items-center justify-center flex-shrink-0">
+                <card.icon className="h-5 w-5 text-saffron" />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                  {card.label}
+                </p>
+                <p className="text-2xl font-black text-saffron">{card.value}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {members.length === 0 ? (
+        <div
+          className="text-center py-16 text-muted-foreground"
+          data-ocid="payouts.empty_state"
+        >
+          <DollarSign className="h-10 w-10 mx-auto mb-3 opacity-30" />
+          <p className="text-sm normal-case">
+            No members imported. Go to Members section to upload a CSV first.
+          </p>
+        </div>
+      ) : (
+        <Card className="shadow-card">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm uppercase tracking-widest text-saffron">
+              Commission Payouts
+            </CardTitle>
+            <Input
+              placeholder="Search members..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="max-w-xs"
+              data-ocid="payouts.search_input"
+            />
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table data-ocid="payouts.table">
+                <TableHeader>
+                  <TableRow className="bg-muted/30">
+                    <TableHead className="text-xs uppercase tracking-widest">
+                      Name
+                    </TableHead>
+                    <TableHead className="text-xs uppercase tracking-widest">
+                      Email
+                    </TableHead>
+                    <TableHead className="text-xs uppercase tracking-widest">
+                      Commission
+                    </TableHead>
+                    <TableHead className="text-xs uppercase tracking-widest">
+                      Status
+                    </TableHead>
+                    <TableHead className="text-xs uppercase tracking-widest text-right">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pageSlice.map((m, i) => {
+                    const globalIdx = getGlobalIndex(i);
+                    return (
+                      <TableRow
+                        key={`payout-${(page - 1) * PAGE_SIZE + i}`}
+                        data-ocid={`payouts.row.${i + 1}`}
+                      >
+                        <TableCell className="font-semibold normal-case text-sm">
+                          {m.name}
+                        </TableCell>
+                        <TableCell className="text-xs normal-case text-muted-foreground">
+                          {m.email}
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-saffron">
+                          ${m.commission.toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          {m.status === "Pending" ? (
+                            <Badge className="bg-saffron text-white text-xs font-bold border-0">
+                              Pending
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-white text-foreground text-xs font-bold border border-border">
+                              Paid
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {m.status === "Pending" && (
+                            <Button
+                              size="sm"
+                              className="bg-saffron/10 text-saffron border border-saffron/30 hover:bg-saffron hover:text-white text-xs font-bold uppercase tracking-wider"
+                              onClick={() => markPaid(globalIdx)}
+                              data-ocid={`payouts.secondary_button.${i + 1}`}
+                            >
+                              Mark Paid
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                <p className="text-xs text-muted-foreground normal-case">
+                  Showing {(page - 1) * PAGE_SIZE + 1}–
+                  {Math.min(page * PAGE_SIZE, filtered.length)} of{" "}
+                  {filtered.length.toLocaleString()}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    data-ocid="payouts.pagination_prev"
+                  >
+                    Prev
+                  </Button>
+                  <span className="text-xs font-bold flex items-center px-2">
+                    {page} / {totalPages}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    data-ocid="payouts.pagination_next"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── Main Admin Page ─────────────────────────────────────────────────────────
+function VendorRequestsSection() {
+  const { data: requests, isLoading } = useVendorRequests();
+  const { mutateAsync: updateStatus, isPending } =
+    useUpdateVendorRequestStatus();
+
+  const vendorList = requests ?? [];
+  const pendingCount = vendorList.filter(
+    ([, r]) => r.status === "pending",
+  ).length;
+
+  const handleStatus = async (id: bigint, status: string) => {
+    try {
+      await updateStatus({ id, status });
+      toast.success(
+        `Request ${status === "approved" ? "approved" : "rejected"}.`,
+      );
+    } catch {
+      toast.error("Failed to update status.");
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      data-ocid="vendor_requests.section"
+    >
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-black uppercase tracking-wide text-saffron">
+          Vendor Requests
+        </h2>
+        {pendingCount > 0 && (
+          <span className="bg-saffron text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">
+            {pendingCount} Pending
+          </span>
+        )}
+      </div>
+      <Card className="shadow-card" data-ocid="vendor_requests.table">
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div
+              className="p-8 text-center text-muted-foreground text-sm"
+              data-ocid="vendor_requests.loading_state"
+            >
+              Loading requests...
+            </div>
+          ) : vendorList.length === 0 ? (
+            <div
+              className="p-12 text-center"
+              data-ocid="vendor_requests.empty_state"
+            >
+              <Store className="h-12 w-12 text-saffron/30 mx-auto mb-3" />
+              <p className="text-muted-foreground text-sm font-medium">
+                No vendor requests yet.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-[#FF9933]/20">
+                    {[
+                      "Vendor Name",
+                      "Business",
+                      "Product",
+                      "Category",
+                      "Price",
+                      "Email",
+                      "Status",
+                      "Actions",
+                    ].map((h) => (
+                      <TableHead
+                        key={h}
+                        className="text-[#FF9933] font-bold text-xs uppercase tracking-widest whitespace-nowrap"
+                      >
+                        {h}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {vendorList.map(([id, req], index) => (
+                    <TableRow
+                      key={id.toString()}
+                      className="border-b border-border/50 hover:bg-muted/30"
+                      data-ocid={`vendor_requests.item.${index + 1}`}
+                    >
+                      <TableCell className="font-semibold text-xs">
+                        {req.vendorName}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {req.businessName}
+                      </TableCell>
+                      <TableCell className="text-xs font-medium">
+                        {req.productName}
+                      </TableCell>
+                      <TableCell className="text-xs">{req.category}</TableCell>
+                      <TableCell className="text-xs">
+                        ${req.price.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {req.contactEmail}
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                            req.status === "approved"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : req.status === "rejected"
+                                ? "bg-red-100 text-red-600"
+                                : "bg-saffron/10 text-saffron"
+                          }`}
+                        >
+                          {req.status}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {req.status === "pending" && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="h-7 px-2 text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase"
+                              disabled={isPending}
+                              onClick={() => handleStatus(id, "approved")}
+                              data-ocid={`vendor_requests.confirm_button.${index + 1}`}
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2 text-[10px] border-red-400 text-red-500 hover:bg-red-50 font-bold uppercase"
+                              disabled={isPending}
+                              onClick={() => handleStatus(id, "rejected")}
+                              data-ocid={`vendor_requests.delete_button.${index + 1}`}
+                            >
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+function OrdersSection() {
+  const { data: orders, isLoading: ordersLoading } = useOrders();
+  const { data: rrIndex } = useRoundRobinIndex();
+
+  const orderList = orders ?? [];
+
+  const formatDate = (ts: bigint) => {
+    const ms = Number(ts) / 1_000_000;
+    return new Date(ms).toLocaleString();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      data-ocid="orders.section"
+    >
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-black uppercase tracking-wide text-saffron">
+          Direct Orders
+        </h2>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+            Round-Robin Index:
+          </span>
+          <span className="bg-saffron text-white text-xs font-black px-3 py-1 rounded-full">
+            #{rrIndex !== undefined ? rrIndex.toString() : "—"}
+          </span>
+        </div>
+      </div>
+      <Card className="shadow-card mb-6" data-ocid="orders.panel">
+        <CardContent className="pt-4 pb-3">
+          <p className="text-xs text-muted-foreground normal-case leading-relaxed">
+            All direct orders from the Home Page are distributed to members
+            sequentially using Round-Robin logic. The counter above shows the
+            current position in the queue.
+          </p>
+        </CardContent>
+      </Card>
+      <Card className="shadow-card" data-ocid="orders.table">
+        <CardContent className="p-0">
+          {ordersLoading ? (
+            <div
+              className="p-8 text-center text-muted-foreground text-sm"
+              data-ocid="orders.loading_state"
+            >
+              Loading orders...
+            </div>
+          ) : orderList.length === 0 ? (
+            <div className="p-12 text-center" data-ocid="orders.empty_state">
+              <ShoppingBag className="h-12 w-12 text-saffron/30 mx-auto mb-3" />
+              <p className="text-muted-foreground text-sm font-medium">
+                No orders yet. Buy Now buttons on the Home Page will generate
+                orders here.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-[#FF9933]/20">
+                    {[
+                      "Order ID",
+                      "Product",
+                      "Member Index",
+                      "Member ID",
+                      "Timestamp",
+                    ].map((h) => (
+                      <TableHead
+                        key={h}
+                        className="text-[#FF9933] font-bold text-xs uppercase tracking-widest whitespace-nowrap"
+                      >
+                        {h}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orderList.map(([id, order], index) => (
+                    <TableRow
+                      key={id.toString()}
+                      className="border-b border-border/50 hover:bg-muted/30"
+                      data-ocid={`orders.item.${index + 1}`}
+                    >
+                      <TableCell className="font-mono text-xs text-muted-foreground">
+                        #{id.toString()}
+                      </TableCell>
+                      <TableCell className="text-xs font-semibold">
+                        {order.productName}
+                      </TableCell>
+                      <TableCell>
+                        <span className="bg-saffron/10 text-saffron text-xs font-black px-2 py-0.5 rounded-full">
+                          Member {Number(order.memberIndex) + 1}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground font-mono">
+                        {order.assignedMemberId || "—"}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {formatDate(order.timestamp)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
 export default function AdminPage() {
   const { identity } = useInternetIdentity();
   const { data: isAdmin, isLoading: checkingAdmin } = useIsAdmin();
   const [section, setSection] = useState<AdminSection>("dashboard");
   const [addOpen, setAddOpen] = useState(false);
+
+  const [importedMembers, setImportedMembers] = useState<ImportedMember[]>([]);
 
   const { data: products, isLoading: productsLoading } = useAllProducts();
   const { data: users, isLoading: usersLoading } = useListAllUsers();
@@ -275,6 +1729,12 @@ export default function AdminPage() {
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "products", label: "Products", icon: Package },
     { id: "users", label: "Users", icon: Users },
+    { id: "members", label: "Members", icon: Users2 },
+    { id: "payouts", label: "Payouts", icon: DollarSign },
+    { id: "globalInsights", label: "Global Insights", icon: Globe },
+    { id: "inventory", label: "Product Inventory", icon: ShoppingBag },
+    { id: "vendorRequests", label: "Vendor Requests", icon: Store },
+    { id: "orders", label: "Orders", icon: ShoppingBag },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -320,7 +1780,7 @@ export default function AdminPage() {
       {/* Main content */}
       <div className="flex-1 overflow-auto">
         <div className="max-w-5xl mx-auto px-6 py-8">
-          {/* Dashboard Section */}
+          {/* Dashboard */}
           {section === "dashboard" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <h2 className="text-2xl font-black uppercase tracking-wide text-saffron mb-6">
@@ -343,7 +1803,7 @@ export default function AdminPage() {
             </motion.div>
           )}
 
-          {/* Products Section */}
+          {/* Products */}
           {section === "products" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div className="flex items-center justify-between mb-6">
@@ -369,11 +1829,10 @@ export default function AdminPage() {
                   </DialogContent>
                 </Dialog>
               </div>
-
               {productsLoading ? (
                 <div className="space-y-2" data-ocid="products.loading_state">
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
+                    <Skeleton key={`skel-p-${i}`} className="h-12 w-full" />
                   ))}
                 </div>
               ) : (
@@ -410,11 +1869,7 @@ export default function AdminPage() {
                             </TableCell>
                             <TableCell>
                               <span
-                                className={`text-xs font-bold uppercase ${
-                                  product.featured
-                                    ? "text-saffron"
-                                    : "text-muted-foreground"
-                                }`}
+                                className={`text-xs font-bold uppercase ${product.featured ? "text-saffron" : "text-muted-foreground"}`}
                               >
                                 {product.featured ? "Yes" : "No"}
                               </span>
@@ -458,7 +1913,7 @@ export default function AdminPage() {
             </motion.div>
           )}
 
-          {/* Users Section */}
+          {/* Users */}
           {section === "users" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <h2 className="text-2xl font-black uppercase tracking-wide text-saffron mb-6">
@@ -467,7 +1922,7 @@ export default function AdminPage() {
               {usersLoading ? (
                 <div className="space-y-2" data-ocid="users.loading_state">
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
+                    <Skeleton key={`skel-u-${i}`} className="h-12 w-full" />
                   ))}
                 </div>
               ) : (
@@ -524,7 +1979,35 @@ export default function AdminPage() {
             </motion.div>
           )}
 
-          {/* Settings Section */}
+          {/* Members */}
+          {section === "members" && (
+            <MembersSection
+              members={importedMembers}
+              setMembers={setImportedMembers}
+            />
+          )}
+
+          {/* Payouts */}
+          {section === "payouts" && (
+            <PayoutsSection
+              members={importedMembers}
+              setMembers={setImportedMembers}
+            />
+          )}
+
+          {/* Global Insights */}
+          {section === "globalInsights" && <GlobalInsightsSection />}
+
+          {/* Product Inventory */}
+          {section === "inventory" && <ProductInventorySection />}
+
+          {/* Vendor Requests */}
+          {section === "vendorRequests" && <VendorRequestsSection />}
+
+          {/* Orders */}
+          {section === "orders" && <OrdersSection />}
+
+          {/* Settings */}
           {section === "settings" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <h2 className="text-2xl font-black uppercase tracking-wide text-saffron mb-6">

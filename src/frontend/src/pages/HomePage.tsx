@@ -1,17 +1,25 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowRight,
   ChevronRight,
   Cpu,
+  ShoppingBag,
   Sparkles,
   Star,
   TrendingUp,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { toast } from "sonner";
 import { Category } from "../backend";
-import { useAllProducts } from "../hooks/useQueries";
+import { CURATED_PRODUCTS } from "../data/curatedProducts";
+import {
+  useAllProducts,
+  useAutoPostCategories,
+  useSubmitOrder,
+} from "../hooks/useQueries";
 
 const CATEGORY_LABELS: Record<Category, string> = {
   [Category.shoesAndClothes]: "Fashion",
@@ -48,6 +56,7 @@ function ProductCard({
   aiReview,
   qualityScore,
   index,
+  onBuyNow,
 }: {
   title: string;
   category: Category;
@@ -55,6 +64,7 @@ function ProductCard({
   aiReview?: string;
   qualityScore?: bigint;
   index: number;
+  onBuyNow?: () => void;
 }) {
   return (
     <motion.div
@@ -92,13 +102,26 @@ function ProductCard({
             </p>
           </div>
         )}
-        <Button
-          size="sm"
-          className="w-full bg-saffron hover:bg-saffron-dark text-white text-xs uppercase tracking-widest font-bold"
-          data-ocid={`products.button.${index + 1}`}
-        >
-          View Product
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            className="flex-1 bg-saffron hover:bg-saffron-dark text-white text-xs uppercase tracking-widest font-bold"
+            data-ocid={`products.button.${index + 1}`}
+          >
+            View Product
+          </Button>
+          {onBuyNow && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 border-saffron text-saffron hover:bg-saffron hover:text-white text-xs uppercase tracking-widest font-bold"
+              onClick={onBuyNow}
+              data-ocid={`products.secondary_button.${index + 1}`}
+            >
+              Buy Now
+            </Button>
+          )}
+        </div>
       </div>
     </motion.div>
   );
@@ -118,10 +141,165 @@ function ProductSkeleton() {
   );
 }
 
+const CATEGORY_DATA: Record<
+  string,
+  { description: string; supplierSearch: string }
+> = {
+  "AI Tech": {
+    description:
+      "AI-powered gadgets, wearables and productivity tools driving record affiliate conversions.",
+    supplierSearch: "https://www.amazon.com/s?k=AI+tech+gadgets",
+  },
+  "Organic Wellness": {
+    description:
+      "Supplements, adaptogens, and clean-label health products with massive DTC growth.",
+    supplierSearch: "https://www.clickbank.com/marketplace/?category=health",
+  },
+  "Eco-Decor": {
+    description:
+      "Sustainable home décor and eco-friendly furnishings surging as green living trends accelerate.",
+    supplierSearch: "https://www.amazon.com/s?k=eco+friendly+home+decor",
+  },
+  "Smart Kitchen": {
+    description:
+      "Connected kitchen appliances and smart cooking tools with strong gifting season demand.",
+    supplierSearch: "https://www.amazon.com/s?k=smart+kitchen+gadgets",
+  },
+  "Solar Power": {
+    description:
+      "Portable solar panels and home energy kits surging due to rising energy costs and eco policy.",
+    supplierSearch: "https://www.amazon.com/s?k=solar+power+portable",
+  },
+  "Leather Goods": {
+    description:
+      "Premium leather bags, wallets, and accessories with high average order values.",
+    supplierSearch: "https://www.amazon.com/s?k=leather+goods+premium",
+  },
+  "Pet Tech": {
+    description:
+      "Smart feeders, GPS trackers, and health monitors for pets — a multi-billion dollar affiliate category.",
+    supplierSearch: "https://www.amazon.com/s?k=pet+tech+gadgets",
+  },
+  "Digital Tools": {
+    description:
+      "Software, SaaS subscriptions, and productivity apps with recurring commission potential.",
+    supplierSearch:
+      "https://www.clickbank.com/marketplace/?category=software_services",
+  },
+  "Yoga Kits": {
+    description:
+      "Premium yoga mats, blocks, straps, and starter bundles with strong wellness community demand.",
+    supplierSearch: "https://www.amazon.com/s?k=yoga+kit+set",
+  },
+  Skincare: {
+    description:
+      "Clean beauty and dermatologist-backed skincare driving high repeat purchases and subscriptions.",
+    supplierSearch: "https://www.clickbank.com/marketplace/?category=health",
+  },
+};
+
+function GlobalBestSellers() {
+  const { data: categories = [], isLoading } = useAutoPostCategories();
+
+  if (isLoading || categories.length === 0) return null;
+
+  return (
+    <section className="py-20 bg-white" data-ocid="bestsellers.section">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground mb-2">
+            Admin Curated
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-wide text-saffron mb-2">
+            Global Best Sellers
+          </h2>
+          <p className="text-sm text-muted-foreground normal-case mb-4">
+            Handpicked trending categories — curated globally, available now
+          </p>
+          <div className="w-16 h-1 bg-saffron mx-auto rounded-full" />
+        </motion.div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {categories.map((cat, idx) => {
+            const info = CATEGORY_DATA[cat] ?? {
+              description:
+                "Globally trending category with strong affiliate demand.",
+              supplierSearch: `https://www.amazon.com/s?k=${encodeURIComponent(cat)}`,
+            };
+            return (
+              <motion.div
+                key={cat}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.06 }}
+                data-ocid={`bestsellers.item.${idx + 1}`}
+              >
+                <Card className="relative border border-saffron/20 hover:border-saffron/60 transition-all hover:shadow-lg overflow-hidden h-full">
+                  {/* Best Seller badge */}
+                  <div
+                    className="absolute top-0 left-0 right-0 flex items-center justify-center py-2 text-white text-xs font-black uppercase tracking-[0.2em]"
+                    style={{ backgroundColor: "#FF9933" }}
+                  >
+                    ★ Best Seller
+                  </div>
+                  <CardContent className="pt-14 pb-6">
+                    <h3 className="text-lg font-black uppercase tracking-wide text-foreground mb-2">
+                      {cat}
+                    </h3>
+                    <p className="text-xs text-muted-foreground normal-case leading-relaxed mb-5">
+                      {info.description}
+                    </p>
+                    <Button
+                      size="sm"
+                      className="w-full font-black uppercase tracking-wider text-xs"
+                      style={{ backgroundColor: "#FF9933", color: "#fff" }}
+                      onClick={() => window.open(info.supplierSearch, "_blank")}
+                      data-ocid={`bestsellers.primary_button.${idx + 1}`}
+                    >
+                      <ShoppingBag className="h-3.5 w-3.5 mr-1.5" />
+                      Shop Now
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function HomePage() {
   const { data: products, isLoading } = useAllProducts();
+  const { mutateAsync: submitOrder } = useSubmitOrder();
 
-  const displayProducts = products?.slice(0, 4).map(([, p]) => p) ?? [];
+  const handleBuyNow = async (productName: string) => {
+    try {
+      const assignedIndex = await submitOrder({
+        productName,
+        totalMembers: BigInt(4000),
+      });
+      toast.success(
+        `Order assigned to Member #${Number(assignedIndex) + 1}. Commission tracking active!`,
+        {
+          duration: 4000,
+        },
+      );
+    } catch {
+      toast.error("Order could not be placed. Please try again.");
+    }
+  };
+
+  const backendProducts = products?.slice(0, 12).map(([, p]) => p) ?? [];
+  const displayProducts =
+    backendProducts.length > 0 ? backendProducts : CURATED_PRODUCTS;
 
   return (
     <main>
@@ -156,9 +334,12 @@ export default function HomePage() {
               <br />
               <span className="text-saffron">Products</span>
             </h1>
-            <p className="text-white/80 text-lg normal-case font-medium leading-relaxed mb-10 max-w-lg">
+            <p className="text-white/80 text-lg normal-case font-medium leading-relaxed mb-6 max-w-lg">
               AI-curated high-demand affiliate products — Tech, Lifestyle &
               Wellness — with verified quality scores and expert reviews.
+            </p>
+            <p className="text-saffron text-5xl font-black uppercase tracking-widest mb-10 drop-shadow-lg">
+              One World One Future
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
@@ -185,6 +366,8 @@ export default function HomePage() {
           style={{ clipPath: "ellipse(55% 100% at 50% 100%)" }}
         />
       </section>
+
+      <GlobalBestSellers />
 
       {/* Trending Products */}
       <section className="py-20 bg-white" data-ocid="trending.section">
@@ -228,6 +411,7 @@ export default function HomePage() {
                     aiReview={product.aiReview}
                     qualityScore={product.qualityScore}
                     index={i}
+                    onBuyNow={() => handleBuyNow(product.title)}
                   />
                 ))}
           </div>
