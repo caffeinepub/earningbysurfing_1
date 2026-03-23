@@ -191,13 +191,23 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-4">
           {/* Brand Logo — 300px wide, sharp, premium, never squished */}
-          <Link to="/" style={{ flexShrink: 0 }} data-ocid="nav.link">
+          <Link
+            to="/"
+            style={{
+              flexShrink: 0,
+              display: "block",
+              width: "400px",
+              maxWidth: "400px",
+              padding: 0,
+            }}
+            data-ocid="nav.link"
+          >
             <img
               src="/assets/generated/earning-by-surfing-logo-transparent.dim_1200x600.png"
               alt="EarningBySurfing — One World One Future"
               style={{
-                width: "300px",
-                maxWidth: "300px",
+                width: "100% !important" as React.CSSProperties["width"],
+                maxWidth: "400px",
                 height: "70px",
                 objectFit: "contain",
                 imageRendering: "auto",
