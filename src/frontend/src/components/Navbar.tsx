@@ -148,7 +148,6 @@ function useAdminAuth() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  // Also poll on focus so same-tab admin login is reflected
   useEffect(() => {
     function onFocus() {
       setIsAdminAuthed(localStorage.getItem("ebs_admin_auth") === "true");
@@ -190,13 +189,14 @@ export default function Navbar() {
 
       {/* Main nav row */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
-          {/* Brand Logo — 50% wider: 450px instead of 300px */}
+        <div className="flex items-center justify-between h-20 gap-4">
+          {/* Brand Logo — scaled 50% wider for maximum prominence */}
           <Link to="/" className="flex-shrink-0" data-ocid="nav.link">
             <img
               src="/assets/generated/earning-by-surfing-logo-transparent.dim_1200x600.png"
               alt="EarningBySurfing — One World One Future"
-              className="h-10 w-auto max-w-[450px] object-contain"
+              className="h-14 w-auto object-contain"
+              style={{ maxWidth: "600px", minWidth: "240px" }}
             />
           </Link>
 

@@ -79,7 +79,6 @@ function ProductCard({
       className="bg-white rounded-lg shadow-card border border-border overflow-hidden group hover:shadow-lg transition-shadow"
       data-ocid={`products.item.${index + 1}`}
     >
-      {/* Product image */}
       <div className="product-image-placeholder h-48 relative overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center">
           <TrendingUp className="h-12 w-12 text-white/40" />
@@ -181,7 +180,7 @@ const CATEGORY_DATA: Record<
   },
   "Pet Tech": {
     description:
-      "Smart feeders, GPS trackers, and health monitors for pets — a multi-billion dollar affiliate category.",
+      "Smart feeders, GPS trackers, and health monitors for pets &#8212; a multi-billion dollar affiliate category.",
     supplierSearch: "https://www.amazon.com/s?k=pet+tech+gadgets",
   },
   "Digital Tools": {
@@ -223,7 +222,8 @@ function GlobalBestSellers() {
             Global Best Sellers
           </h2>
           <p className="text-sm text-muted-foreground normal-case mb-4">
-            Handpicked trending categories — curated globally, available now
+            Handpicked trending categories &#8212; curated globally, available
+            now
           </p>
           <div className="w-16 h-1 bg-saffron mx-auto rounded-full" />
         </motion.div>
@@ -249,7 +249,7 @@ function GlobalBestSellers() {
                     className="absolute top-0 left-0 right-0 flex items-center justify-center py-2 text-white text-xs font-black uppercase tracking-[0.2em]"
                     style={{ backgroundColor: "#FF9933" }}
                   >
-                    ★ Best Seller
+                    &#9733; Best Seller
                   </div>
                   <CardContent className="pt-14 pb-6">
                     <h3 className="text-lg font-black uppercase tracking-wide text-foreground mb-2">
@@ -291,9 +291,7 @@ export default function HomePage() {
       });
       toast.success(
         `Order assigned to Member #${Number(assignedIndex) + 1}. Commission tracking active!`,
-        {
-          duration: 4000,
-        },
+        { duration: 4000 },
       );
     } catch {
       toast.error("Order could not be placed. Please try again.");
@@ -306,61 +304,75 @@ export default function HomePage() {
 
   return (
     <main>
-      {/* Hero Section */}
+      {/* ── Hero Section ── */}
       <section
         className="relative min-h-[85vh] flex items-center overflow-hidden"
         data-ocid="hero.section"
       >
-        {/* Background gradient */}
+        {/* Solid Khalish Saffron background */}
         <div
           className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(135deg, #1a0a00 0%, #3d1f00 40%, #6b3800 70%, #ff9933 130%)",
-            zIndex: 0,
-          }}
+          style={{ backgroundColor: "#FF9933", zIndex: 0 }}
         />
-        <div className="hero-gradient absolute inset-0" style={{ zIndex: 1 }} />
 
-        {/* 3D Animation — React Three Fiber canvas, above gradient, below text */}
+        {/* 3D Globe animation — centered canvas */}
         <HeroErrorBoundary>
           <Suspense fallback={null}>
             <HeroAnimation />
           </Suspense>
         </HeroErrorBoundary>
 
+        {/* Hero text — left column, above canvas */}
         <div
-          className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
+          className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full"
           style={{ zIndex: 10 }}
         >
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="max-w-2xl"
+            className="max-w-xl"
           >
-            <p className="text-white/70 text-xs font-semibold uppercase tracking-[0.3em] mb-4">
+            <p
+              className="text-white/90 text-xs font-bold uppercase tracking-[0.3em] mb-4"
+              style={{ textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}
+            >
               Welcome to EarningBySurfing
             </p>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black uppercase leading-none mb-6">
-              <span className="text-saffron">Discover</span>
+            <h1
+              className="text-5xl sm:text-6xl lg:text-7xl font-black uppercase leading-none mb-6"
+              style={{
+                textShadow:
+                  "2px 3px 0 rgba(0,0,0,0.18), 0 1px 8px rgba(0,0,0,0.12)",
+              }}
+            >
+              <span className="text-white">Discover</span>
               <br />
               <span className="text-white">Premium</span>
               <br />
-              <span className="text-saffron">Products</span>
+              <span className="text-white">Products</span>
             </h1>
-            <p className="text-white/80 text-lg normal-case font-medium leading-relaxed mb-6 max-w-lg">
-              AI-curated high-demand affiliate products &mdash; Tech, Lifestyle
-              &amp; Wellness &mdash; with verified quality scores and expert
+            <p
+              className="text-white text-lg normal-case font-semibold leading-relaxed mb-6 max-w-lg"
+              style={{ textShadow: "0 1px 4px rgba(0,0,0,0.2)" }}
+            >
+              AI-curated high-demand affiliate products &#8212; Tech, Lifestyle
+              &amp; Wellness &#8212; with verified quality scores and expert
               reviews.
             </p>
-            <p className="text-saffron text-5xl font-black uppercase tracking-widest mb-10 drop-shadow-lg">
+            <p
+              className="text-white text-4xl sm:text-5xl font-black uppercase tracking-widest mb-10"
+              style={{
+                textShadow:
+                  "3px 4px 0 rgba(0,0,0,0.2), 0 2px 12px rgba(0,0,0,0.15)",
+              }}
+            >
               One World One Future
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
                 size="lg"
-                className="bg-saffron hover:bg-saffron-dark text-white font-black uppercase tracking-widest text-sm px-8"
+                className="bg-white text-[#FF9933] hover:bg-white/90 font-black uppercase tracking-widest text-sm px-8 shadow-lg"
                 data-ocid="hero.primary_button"
               >
                 SHOP NOW <ArrowRight className="ml-2 h-4 w-4" />
@@ -368,7 +380,8 @@ export default function HomePage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-white text-white bg-transparent hover:bg-white/10 font-black uppercase tracking-widest text-sm px-8"
+                className="border-white text-white bg-transparent hover:bg-white/15 font-black uppercase tracking-widest text-sm px-8"
+                style={{ borderColor: "rgba(255,255,255,0.7)" }}
                 data-ocid="hero.secondary_button"
               >
                 EXPLORE TRENDING
@@ -377,6 +390,7 @@ export default function HomePage() {
           </motion.div>
         </div>
 
+        {/* White wave clip at bottom */}
         <div
           className="absolute bottom-0 left-0 right-0 h-16 bg-white"
           style={{ clipPath: "ellipse(55% 100% at 50% 100%)", zIndex: 11 }}
@@ -499,7 +513,8 @@ export default function HomePage() {
               </p>
               <p className="text-muted-foreground text-sm normal-case leading-relaxed mb-6">
                 Every product receives an AI-generated quality score and expert
-                review — so you always know exactly what you&apos;re promoting.
+                review &#8212; so you always know exactly what you&apos;re
+                promoting.
               </p>
               <div className="flex items-center gap-3">
                 {[1, 2, 3, 4, 5].map((s) => (
@@ -525,7 +540,7 @@ export default function HomePage() {
             <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-wide text-white mb-4">
               Start Earning Today
             </h2>
-            <p className="text-white/80 text-lg normal-case font-medium mb-8">
+            <p className="text-white/90 text-lg normal-case font-medium mb-8">
               Join our platform and get access to AI-curated products, smart
               affiliate links, and WhatsApp marketing tools.
             </p>

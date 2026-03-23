@@ -1,410 +1,197 @@
-import { useLoader } from "@react-three/fiber";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Suspense, useMemo, useRef } from "react";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { TextureLoader } from "three";
 
-// NASA Blue Marble texture (via unpkg CDN — three-globe package)
-const NASA_TEXTURE_URL =
-  "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
-const NASA_CLOUDS_URL =
-  "https://unpkg.com/three-globe/example/img/earth-clouds.png";
+const GLOBE_RADIUS = 3.2;
 
-// ─── Wave Ocean ────────────────────────────────────────────────────────────────
-function WaveOcean() {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const timeRef = useRef(0);
-
-  useFrame((_, delta) => {
-    timeRef.current += delta;
-    const t = timeRef.current;
-    const mesh = meshRef.current;
-    if (!mesh) return;
-    const geo = mesh.geometry as THREE.BufferGeometry;
-    const pos = geo.attributes.position as THREE.BufferAttribute;
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i);
-      const z = pos.getZ(i);
-      const y =
-        Math.sin(x * 0.4 + t * 0.8) * 0.6 + Math.sin(z * 0.3 + t * 0.6) * 0.4;
-      pos.setY(i, y);
-    }
-    pos.needsUpdate = true;
-    geo.computeVertexNormals();
-  });
-
-  return (
-    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-      <planeGeometry args={[80, 40, 50, 25]} />
-      <meshStandardMaterial
-        color="#FF9933"
-        metalness={0.3}
-        roughness={0.6}
-        transparent
-        opacity={0.55}
-        side={THREE.DoubleSide}
-      />
-    </mesh>
+// ─── Textured Blue Earth Globe (local asset, instant load) ───
+function EarthGlobe() {
+  const groupRef = useRef<THREE.Group>(null);
+  const texture = useLoader(
+    TextureLoader,
+    "/assets/generated/earth-texture-map.dim_2048x1024.jpg",
   );
-}
 
-// ─── Surfboard ─────────────────────────────────────────────────────────────────
-function Surfboard() {
-  const boardRef = useRef<THREE.Mesh>(null);
-  const timeRef = useRef(0);
-
+  // Clockwise from viewer (camera at +Z): positive Y rotation
   useFrame((_, delta) => {
-    timeRef.current += delta;
-    const t = timeRef.current;
-    const board = boardRef.current;
-    if (!board) return;
-    board.position.y = 1.2 + Math.sin(t * 1.1) * 0.25;
-    board.rotation.y += 0.003;
-    board.rotation.x = Math.sin(t * 0.7) * 0.08;
+    if (groupRef.current) groupRef.current.rotation.y += delta * 0.2;
   });
 
   return (
-    <mesh ref={boardRef} position={[0, 1.2, 0]} scale={[1, 0.18, 1]}>
-      <capsuleGeometry args={[0.4, 3.5, 8, 16]} />
-      <meshStandardMaterial
-        color="#FFD700"
-        metalness={0.9}
-        roughness={0.1}
-        emissive="#FF9933"
-        emissiveIntensity={0.3}
-      />
-    </mesh>
-  );
-}
-
-// ─── NASA Globe (with satellite texture from CDN) ─────────────────────────────
-function NASAGlobe() {
-  const earthTexture = useLoader(THREE.TextureLoader, NASA_TEXTURE_URL);
-  const cloudTexture = useLoader(THREE.TextureLoader, NASA_CLOUDS_URL);
-  const globeRef = useRef<THREE.Mesh>(null);
-  const cloudsRef = useRef<THREE.Mesh>(null);
-
-  useFrame((_, delta) => {
-    if (globeRef.current) globeRef.current.rotation.y += delta * 0.2;
-    if (cloudsRef.current) cloudsRef.current.rotation.y += delta * 0.25;
-  });
-
-  return (
-    <>
-      {/* Atmosphere outer glow */}
-      <mesh position={[6, 3, -5]} scale={1.08}>
-        <sphereGeometry args={[3, 32, 32]} />
+    <group ref={groupRef}>
+      {/* Main Earth sphere with texture */}
+      <mesh>
+        <sphereGeometry args={[GLOBE_RADIUS, 64, 64]} />
+        <meshStandardMaterial map={texture} roughness={0.7} metalness={0.1} />
+      </mesh>
+      {/* Subtle atmosphere glow */}
+      <mesh>
+        <sphereGeometry args={[GLOBE_RADIUS * 1.04, 32, 32]} />
         <meshBasicMaterial
-          color="#6aafff"
+          color="#4488ff"
           transparent
-          opacity={0.07}
+          opacity={0.06}
           side={THREE.BackSide}
         />
       </mesh>
-
-      {/* Earth sphere with NASA texture */}
-      <mesh ref={globeRef} position={[6, 3, -5]}>
-        <sphereGeometry args={[3, 64, 64]} />
-        <meshPhongMaterial
-          map={earthTexture}
-          specular={new THREE.Color(0x333333)}
-          shininess={18}
-        />
-      </mesh>
-
-      {/* Cloud layer */}
-      <mesh ref={cloudsRef} position={[6, 3, -5]} scale={1.015}>
-        <sphereGeometry args={[3, 48, 48]} />
-        <meshPhongMaterial
-          map={cloudTexture}
-          transparent
-          opacity={0.4}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Sunlight from top-right */}
-      <pointLight
-        position={[14, 8, 2]}
-        color="#fff5e0"
-        intensity={60}
-        distance={30}
-      />
-    </>
+    </group>
   );
 }
 
-// ─── Fallback Globe (canvas-painted, shown while texture loads) ───────────────
-function FallbackGlobe() {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const texture = useMemo(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 256;
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "#1a4d8f";
-    ctx.fillRect(0, 0, 512, 256);
-    ctx.fillStyle = "#2d7a3c";
-    // Basic continent blobs
-    ctx.beginPath();
-    ctx.ellipse(170, 110, 60, 55, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(280, 90, 110, 45, -0.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(80, 80, 55, 40, 0.1, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(105, 145, 30, 45, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(390, 155, 45, 30, 0.2, 0, Math.PI * 2);
-    ctx.fill();
-    return new THREE.CanvasTexture(canvas);
-  }, []);
-
-  useFrame((_, delta) => {
-    if (meshRef.current) meshRef.current.rotation.y += delta * 0.2;
-  });
-
-  return (
-    <mesh ref={meshRef} position={[6, 3, -5]}>
-      <sphereGeometry args={[3, 48, 48]} />
-      <meshStandardMaterial map={texture} metalness={0.1} roughness={0.7} />
-    </mesh>
-  );
-}
-
-// ─── Currency Texture ──────────────────────────────────────────────────────────
-function makeCurrencyTexture(symbol: string, color = "#FFD700"): THREE.Texture {
+// ─── Currency text sprite — GULABI PINK palette ───
+function makeCurrencySprite(symbol: string): THREE.Texture {
   const canvas = document.createElement("canvas");
   canvas.width = 128;
   canvas.height = 128;
   const ctx = canvas.getContext("2d")!;
 
-  // Metallic disc
-  const grad = ctx.createRadialGradient(48, 44, 4, 64, 64, 58);
-  grad.addColorStop(0, color === "#FFD700" ? "#fff7a0" : "#f0f0f0");
-  grad.addColorStop(0.5, color);
-  grad.addColorStop(1, color === "#FFD700" ? "#a07000" : "#888888");
-
+  // Vibrant Gulabi pink radial gradient background
+  const grad = ctx.createRadialGradient(64, 64, 10, 64, 64, 55);
+  grad.addColorStop(0, "rgba(255, 20, 147, 0.95)"); // deep pink centre
+  grad.addColorStop(0.55, "rgba(255, 105, 180, 0.80)"); // hot pink mid
+  grad.addColorStop(1, "rgba(255, 182, 193, 0)"); // light pink fade
   ctx.beginPath();
-  ctx.arc(64, 64, 56, 0, Math.PI * 2);
+  ctx.arc(64, 64, 55, 0, Math.PI * 2);
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // Rim
-  ctx.strokeStyle = color === "#FFD700" ? "#c09000" : "#666666";
-  ctx.lineWidth = 3;
-  ctx.stroke();
-
-  // Symbol — use smaller font for multi-char symbols like د.إ
-  const isMultiChar = [...symbol].length > 1;
-  ctx.font = `bold ${isMultiChar ? 36 : 52}px Arial, sans-serif`;
-  ctx.fillStyle = "rgba(0,0,0,0.7)";
+  const isLong = [...symbol].length > 1;
+  ctx.font = `bold ${isLong ? 34 : 52}px Arial, sans-serif`;
+  ctx.fillStyle = "#ffffff";
+  ctx.shadowColor = "#FF1493";
+  ctx.shadowBlur = 16;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(symbol, 64, 68);
+  ctx.fillText(symbol, 64, 66);
 
   return new THREE.CanvasTexture(canvas);
 }
 
-// ─── Orbiting Currency Tokens ─────────────────────────────────────────────────
-const ORBIT_CONFIG = [
+// Three orbital plane tilts
+const ORBIT_TILTS = [
+  { rx: 0.3, rz: 0.1, r: GLOBE_RADIUS + 1.1 },
+  { rx: -0.4, rz: 0.5, r: GLOBE_RADIUS + 1.4 },
+  { rx: 1.0, rz: -0.3, r: GLOBE_RADIUS + 1.0 },
+];
+
+const CURRENCIES: {
+  id: string;
+  symbol: string;
+  orbit: number;
+  phase: number;
+  speed: number;
+  size: number;
+}[] = [
+  { id: "inr", symbol: "\u20b9", orbit: 0, phase: 0, speed: 0.48, size: 1.3 },
   {
-    symbol: "\u20b9",
-    color: "#FFD700",
-    radius: 4.5,
-    speed: 0.7,
-    phase: 0,
-    tilt: 0.3,
-  },
-  {
+    id: "aed",
     symbol: "\u062f.\u0625",
-    color: "#FFD700",
-    radius: 5.0,
-    speed: 0.55,
-    phase: 1.05,
-    tilt: 0.45,
+    orbit: 1,
+    phase: 0.8,
+    speed: 0.38,
+    size: 1.2,
   },
+  { id: "usd", symbol: "$", orbit: 2, phase: 1.6, speed: 0.44, size: 1.1 },
   {
-    symbol: "$",
-    color: "#C0C0C0",
-    radius: 5.2,
-    speed: 0.5,
-    phase: 2.09,
-    tilt: -0.4,
-  },
-  {
+    id: "eur",
     symbol: "\u20ac",
-    color: "#FFD700",
-    radius: 4.8,
-    speed: 0.8,
-    phase: 3.14,
-    tilt: 0.6,
+    orbit: 0,
+    phase: Math.PI,
+    speed: 0.48,
+    size: 1.1,
   },
   {
-    symbol: "\u00a3",
-    color: "#C0C0C0",
-    radius: 5.5,
-    speed: 0.6,
-    phase: 4.19,
-    tilt: -0.2,
-  },
-  {
+    id: "jpy",
     symbol: "\u00a5",
-    color: "#FFD700",
-    radius: 4.2,
-    speed: 0.9,
-    phase: 5.24,
-    tilt: 0.5,
+    orbit: 1,
+    phase: Math.PI + 0.8,
+    speed: 0.38,
+    size: 1.1,
+  },
+  {
+    id: "gbp",
+    symbol: "\u00a3",
+    orbit: 2,
+    phase: Math.PI + 1.6,
+    speed: 0.44,
+    size: 1.1,
   },
 ];
 
-const GLOBE_CENTER = new THREE.Vector3(6, 3, -5);
-
-function OrbitingToken({
+function FloatingCurrency({
   symbol,
-  color,
-  radius,
-  speed,
+  orbit,
   phase,
-  tilt,
+  speed,
+  size,
 }: {
   symbol: string;
-  color: string;
-  radius: number;
-  speed: number;
+  orbit: number;
   phase: number;
-  tilt: number;
+  speed: number;
+  size: number;
 }) {
   const spriteRef = useRef<THREE.Sprite>(null);
-  const timeRef = useRef(phase);
-  const texture = useMemo(
-    () => makeCurrencyTexture(symbol, color),
-    [symbol, color],
-  );
+  // Clockwise orbits: angle DECREASES so the particle moves right→down→left→up
+  const angleRef = useRef(phase);
+  const texture = useMemo(() => makeCurrencySprite(symbol), [symbol]);
+  const tilt = ORBIT_TILTS[orbit];
 
   useFrame((_, delta) => {
-    timeRef.current += delta * speed;
-    const t = timeRef.current;
-    const x = GLOBE_CENTER.x + Math.cos(t) * radius;
-    const y = GLOBE_CENTER.y + Math.sin(t) * Math.sin(tilt) * radius * 0.5;
-    const z = GLOBE_CENTER.z + Math.sin(t) * radius * Math.cos(tilt);
+    // Subtract angle for clockwise orbit (from viewer perspective)
+    angleRef.current -= delta * speed;
+    const a = angleRef.current;
+    const r = tilt.r;
+
+    let x = r * Math.cos(a);
+    let y = r * Math.sin(a);
+    let z = 0;
+
+    const y1 = y * Math.cos(tilt.rx) - z * Math.sin(tilt.rx);
+    const z1 = y * Math.sin(tilt.rx) + z * Math.cos(tilt.rx);
+    y = y1;
+    z = z1;
+
+    const x2 = x * Math.cos(tilt.rz) - y * Math.sin(tilt.rz);
+    const y2 = x * Math.sin(tilt.rz) + y * Math.cos(tilt.rz);
+    x = x2;
+    y = y2;
+
     if (spriteRef.current) spriteRef.current.position.set(x, y, z);
   });
 
   return (
-    <sprite ref={spriteRef} scale={[1.2, 1.2, 1.2]}>
-      <spriteMaterial
-        map={texture}
-        transparent
-        opacity={0.92}
-        depthWrite={false}
-      />
+    <sprite ref={spriteRef} scale={[size, size, size]}>
+      <spriteMaterial map={texture} transparent depthWrite={false} />
     </sprite>
   );
 }
 
-function OrbitingCurrencyTokens() {
-  return (
-    <>
-      {ORBIT_CONFIG.map((cfg) => (
-        <OrbitingToken key={cfg.symbol} {...cfg} />
-      ))}
-    </>
-  );
-}
-
-// ─── Data Streams ──────────────────────────────────────────────────────────────
-const STREAM_CONFIG = [
-  { x: -8, z: -5 },
-  { x: -14, z: 2 },
-  { x: 5, z: -8 },
-  { x: 12, z: -3 },
-  { x: -3, z: 4 },
-  { x: 9, z: 6 },
-];
-
-function DataStream({
-  x,
-  z,
-  offset,
-}: { x: number; z: number; offset: number }) {
-  const ref = useRef<THREE.Mesh>(null);
-  const timeRef = useRef(offset);
-
-  useFrame((_, delta) => {
-    timeRef.current += delta * 0.5;
-    const mesh = ref.current;
-    if (!mesh) return;
-    mesh.position.y = ((timeRef.current % 8) - 4) * 1.2;
-  });
-
-  return (
-    <mesh ref={ref} position={[x, 0, z]}>
-      <cylinderGeometry args={[0.012, 0.012, 6, 6]} />
-      <meshBasicMaterial color="#FF9933" transparent opacity={0.5} />
-    </mesh>
-  );
-}
-
-function DataStreams() {
-  return (
-    <>
-      {STREAM_CONFIG.map((cfg, i) => (
-        <DataStream
-          key={`stream-${cfg.x}-${cfg.z}`}
-          x={cfg.x}
-          z={cfg.z}
-          offset={i * 1.3}
-        />
-      ))}
-    </>
-  );
-}
-
-// ─── Scene ─────────────────────────────────────────────────────────────────────
 function Scene() {
   return (
     <>
-      <fog attach="fog" args={["#1a0a00", 18, 45]} />
-      <ambientLight intensity={0.5} />
+      <ambientLight intensity={1.2} />
+      <directionalLight position={[8, 6, 8]} color="#ffffff" intensity={2.5} />
       <pointLight
-        position={[5, 8, 3]}
-        color="#FF9933"
-        intensity={60}
+        position={[-6, 4, 5]}
+        color="#FF69B4"
+        intensity={10}
         distance={30}
       />
-      <pointLight
-        position={[-6, 5, -2]}
-        color="#FFD700"
-        intensity={40}
-        distance={25}
-      />
-      <pointLight
-        position={[0, 3, 8]}
-        color="#ffffff"
-        intensity={20}
-        distance={20}
-      />
-      <WaveOcean />
-      <Surfboard />
-      <Suspense fallback={<FallbackGlobe />}>
-        <NASAGlobe />
-      </Suspense>
-      <OrbitingCurrencyTokens />
-      <DataStreams />
+      <EarthGlobe />
+      {CURRENCIES.map((cfg) => (
+        <FloatingCurrency key={cfg.id} {...cfg} />
+      ))}
     </>
   );
 }
 
-// ─── Main Export ───────────────────────────────────────────────────────────────
 export default function HeroAnimation() {
   return (
     <Canvas
       dpr={[1, 1.5]}
-      camera={{ position: [0, 5, 14], fov: 55 }}
+      camera={{ position: [0, 1.5, 11], fov: 50 }}
       gl={{ alpha: true, antialias: false }}
       frameloop="always"
       style={{
