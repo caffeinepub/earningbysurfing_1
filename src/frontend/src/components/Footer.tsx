@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Facebook, Globe, Instagram, Twitter, Youtube } from "lucide-react";
 import { useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -14,21 +15,19 @@ const socialLinks = [
   { Icon: Youtube, label: "YouTube" },
 ];
 
-const customerLinks = [
-  "About Us",
-  "Contact Us",
-  "FAQs",
-  "Shipping Policy",
-  "Return Policy",
-  "Privacy Policy",
-  "Terms of Service",
-];
 const connectLinks = [
   "Newsletter",
   "Blog",
   "Affiliate Program",
   "Partner With Us",
   "Careers",
+];
+
+const legalLinks = [
+  { label: "About Us", to: "/about" },
+  { label: "Contact Us", to: "/contact" },
+  { label: "Terms & Conditions", to: "/terms" },
+  { label: "Privacy Policy", to: "/privacy" },
 ];
 
 export default function Footer() {
@@ -46,14 +45,14 @@ export default function Footer() {
   return (
     <footer className="bg-saffron text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand column */}
           <div>
             <h3 className="text-xl font-black uppercase tracking-widest mb-1">
               EarningBySurfing
             </h3>
             <p className="text-white font-bold italic tracking-widest text-sm mb-4">
-              ✦ {t("One World One Future")} ✦
+              ❖ {t("One World One Future")} ❖
             </p>
             <p className="text-white/80 text-sm font-medium leading-relaxed mb-6 normal-case">
               Your premium destination for high-demand products and exclusive
@@ -72,19 +71,33 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick links */}
+          {/* Legal / Info Links */}
           <div>
             <h4 className="text-sm font-bold uppercase tracking-widest mb-4">
-              Customer Service
+              Company
             </h4>
             <ul className="space-y-2">
-              {customerLinks.map((link) => (
-                <li key={link}>
-                  <span className="text-white/80 hover:text-white text-sm transition-colors normal-case font-medium cursor-pointer">
-                    {link}
-                  </span>
+              {legalLinks.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    className="text-white/80 hover:text-white text-sm transition-colors normal-case font-medium"
+                    data-ocid="footer.link"
+                  >
+                    {link.label}
+                  </Link>
                 </li>
               ))}
+              <li>
+                <span className="text-white/80 hover:text-white text-sm transition-colors normal-case font-medium cursor-pointer">
+                  FAQs
+                </span>
+              </li>
+              <li>
+                <span className="text-white/80 hover:text-white text-sm transition-colors normal-case font-medium cursor-pointer">
+                  Return Policy
+                </span>
+              </li>
             </ul>
           </div>
 
@@ -102,26 +115,49 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-            <div className="mt-6 p-3 bg-white/15 rounded-lg">
-              <p className="text-xs font-bold uppercase tracking-wider mb-1">
-                Stay Updated
-              </p>
-              <div className="flex mt-2">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-3 py-2 text-xs bg-white/20 text-white placeholder-white/60 outline-none rounded-l normal-case"
-                  data-ocid="footer.input"
-                />
-                <button
-                  type="button"
-                  className="bg-white text-saffron font-bold text-xs px-3 py-2 rounded-r uppercase tracking-wide hover:bg-white/90 transition-colors"
-                  data-ocid="footer.button"
-                >
-                  JOIN
-                </button>
-              </div>
+          </div>
+
+          {/* Newsletter */}
+          <div>
+            <h4 className="text-sm font-bold uppercase tracking-widest mb-4">
+              Stay Updated
+            </h4>
+            <p className="text-white/70 text-sm normal-case mb-4">
+              Join thousands of members earning through our platform.
+            </p>
+            <div className="flex">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="flex-1 px-3 py-2 text-xs bg-white/20 text-white placeholder-white/60 outline-none rounded-l normal-case"
+                data-ocid="footer.input"
+              />
+              <button
+                type="button"
+                className="bg-white text-saffron font-bold text-xs px-3 py-2 rounded-r uppercase tracking-wide hover:bg-white/90 transition-colors"
+                data-ocid="footer.button"
+              >
+                JOIN
+              </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Legal nav strip */}
+      <div className="border-t border-white/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            {legalLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="text-white/70 hover:text-white text-xs normal-case transition-colors"
+                data-ocid="footer.link"
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

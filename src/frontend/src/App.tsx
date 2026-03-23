@@ -11,9 +11,14 @@ import { useEffect } from "react";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { generateSeedMembers } from "./data/seedMembers";
+import AboutPage from "./pages/AboutPage";
 import AdminPage from "./pages/AdminPage";
+import ContactPage from "./pages/ContactPage";
 import DashboardPage from "./pages/DashboardPage";
 import HomePage from "./pages/HomePage";
+import PrivacyPage from "./pages/PrivacyPage";
+import TermsPage from "./pages/TermsPage";
 import VendorPage from "./pages/VendorPage";
 
 const queryClient = new QueryClient({
@@ -55,12 +60,36 @@ const vendorRoute = createRoute({
   path: "/vendor",
   component: VendorPage,
 });
+const aboutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/about",
+  component: AboutPage,
+});
+const contactRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/contact",
+  component: ContactPage,
+});
+const termsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/terms",
+  component: TermsPage,
+});
+const privacyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/privacy",
+  component: PrivacyPage,
+});
 
 const routeTree = rootRoute.addChildren([
   homeRoute,
   dashboardRoute,
   adminRoute,
   vendorRoute,
+  aboutRoute,
+  contactRoute,
+  termsRoute,
+  privacyRoute,
 ]);
 const router = createRouter({ routeTree });
 
@@ -75,6 +104,14 @@ export default function App() {
     const handler = (e: MouseEvent) => e.preventDefault();
     document.addEventListener("contextmenu", handler);
     return () => document.removeEventListener("contextmenu", handler);
+  }, []);
+
+  useEffect(() => {
+    if (!localStorage.getItem("ebs_members")) {
+      const members = generateSeedMembers();
+      localStorage.setItem("ebs_members", JSON.stringify(members));
+      localStorage.setItem("ebs_members_source", "seed");
+    }
   }, []);
 
   return (

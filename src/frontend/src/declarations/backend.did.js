@@ -39,6 +39,10 @@ export const InventoryProduct = IDL.Record({
   'affiliateLink' : IDL.Text,
   'price' : IDL.Float64,
 });
+export const PageContent = IDL.Record({
+  'title' : IDL.Text,
+  'content' : IDL.Text,
+});
 export const Time = IDL.Int;
 export const UserProfile = IDL.Record({
   'joinDate' : Time,
@@ -88,6 +92,11 @@ export const idlService = IDL.Service({
       [IDL.Vec(IDL.Tuple(IDL.Nat, InventoryProduct))],
       ['query'],
     ),
+  'getAllPageContents' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Text, PageContent))],
+      ['query'],
+    ),
   'getAllProducts' : IDL.Func(
       [],
       [IDL.Vec(IDL.Tuple(ProductId, Product))],
@@ -103,6 +112,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getOrders' : IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Nat, Order))], ['query']),
+  'getPageContent' : IDL.Func([IDL.Text], [IDL.Opt(PageContent)], ['query']),
   'getProduct' : IDL.Func([IDL.Nat], [IDL.Opt(Product)], ['query']),
   'getProductsByCategory' : IDL.Func(
       [Category],
@@ -132,6 +142,7 @@ export const idlService = IDL.Service({
   'removeAutoPostCategory' : IDL.Func([IDL.Text], [], []),
   'resetRoundRobinIndex' : IDL.Func([], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'setPageContent' : IDL.Func([IDL.Text, PageContent], [], []),
   'submitOrder' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Nat], []),
   'submitVendorRequest' : IDL.Func([VendorRequest], [IDL.Nat], []),
   'trackVisitor' : IDL.Func([], [], []),
@@ -179,6 +190,7 @@ export const idlFactory = ({ IDL }) => {
     'affiliateLink' : IDL.Text,
     'price' : IDL.Float64,
   });
+  const PageContent = IDL.Record({ 'title' : IDL.Text, 'content' : IDL.Text });
   const Time = IDL.Int;
   const UserProfile = IDL.Record({
     'joinDate' : Time,
@@ -228,6 +240,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Nat, InventoryProduct))],
         ['query'],
       ),
+    'getAllPageContents' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, PageContent))],
+        ['query'],
+      ),
     'getAllProducts' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(ProductId, Product))],
@@ -243,6 +260,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getOrders' : IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Nat, Order))], ['query']),
+    'getPageContent' : IDL.Func([IDL.Text], [IDL.Opt(PageContent)], ['query']),
     'getProduct' : IDL.Func([IDL.Nat], [IDL.Opt(Product)], ['query']),
     'getProductsByCategory' : IDL.Func(
         [Category],
@@ -272,6 +290,7 @@ export const idlFactory = ({ IDL }) => {
     'removeAutoPostCategory' : IDL.Func([IDL.Text], [], []),
     'resetRoundRobinIndex' : IDL.Func([], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'setPageContent' : IDL.Func([IDL.Text, PageContent], [], []),
     'submitOrder' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Nat], []),
     'submitVendorRequest' : IDL.Func([VendorRequest], [IDL.Nat], []),
     'trackVisitor' : IDL.Func([], [], []),

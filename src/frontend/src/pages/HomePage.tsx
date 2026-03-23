@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { Suspense, lazy } from "react";
 import { toast } from "sonner";
 import { Category } from "../backend";
 import { CURATED_PRODUCTS } from "../data/curatedProducts";
@@ -20,6 +21,8 @@ import {
   useAutoPostCategories,
   useSubmitOrder,
 } from "../hooks/useQueries";
+
+const HeroAnimation = lazy(() => import("../components/HeroAnimation"));
 
 const CATEGORY_LABELS: Record<Category, string> = {
   [Category.shoesAndClothes]: "Fashion",
@@ -157,7 +160,7 @@ const CATEGORY_DATA: Record<
   },
   "Eco-Decor": {
     description:
-      "Sustainable home décor and eco-friendly furnishings surging as green living trends accelerate.",
+      "Sustainable home d\u00e9cor and eco-friendly furnishings surging as green living trends accelerate.",
     supplierSearch: "https://www.amazon.com/s?k=eco+friendly+home+decor",
   },
   "Smart Kitchen": {
@@ -177,7 +180,7 @@ const CATEGORY_DATA: Record<
   },
   "Pet Tech": {
     description:
-      "Smart feeders, GPS trackers, and health monitors for pets — a multi-billion dollar affiliate category.",
+      "Smart feeders, GPS trackers, and health monitors for pets \u2014 a multi-billion dollar affiliate category.",
     supplierSearch: "https://www.amazon.com/s?k=pet+tech+gadgets",
   },
   "Digital Tools": {
@@ -219,7 +222,8 @@ function GlobalBestSellers() {
             Global Best Sellers
           </h2>
           <p className="text-sm text-muted-foreground normal-case mb-4">
-            Handpicked trending categories — curated globally, available now
+            Handpicked trending categories \u2014 curated globally, available
+            now
           </p>
           <div className="w-16 h-1 bg-saffron mx-auto rounded-full" />
         </motion.div>
@@ -241,12 +245,11 @@ function GlobalBestSellers() {
                 data-ocid={`bestsellers.item.${idx + 1}`}
               >
                 <Card className="relative border border-saffron/20 hover:border-saffron/60 transition-all hover:shadow-lg overflow-hidden h-full">
-                  {/* Best Seller badge */}
                   <div
                     className="absolute top-0 left-0 right-0 flex items-center justify-center py-2 text-white text-xs font-black uppercase tracking-[0.2em]"
                     style={{ backgroundColor: "#FF9933" }}
                   >
-                    ★ Best Seller
+                    \u2605 Best Seller
                   </div>
                   <CardContent className="pt-14 pb-6">
                     <h3 className="text-lg font-black uppercase tracking-wide text-foreground mb-2">
@@ -308,6 +311,7 @@ export default function HomePage() {
         className="relative min-h-[85vh] flex items-center overflow-hidden"
         data-ocid="hero.section"
       >
+        {/* Background gradient */}
         <div
           className="absolute inset-0"
           style={{
@@ -316,6 +320,11 @@ export default function HomePage() {
           }}
         />
         <div className="hero-gradient absolute inset-0" />
+
+        {/* 3D Looping Animation — canvas particles + rings, sits above gradient, below text */}
+        <Suspense fallback={null}>
+          <HeroAnimation />
+        </Suspense>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <motion.div
@@ -335,8 +344,9 @@ export default function HomePage() {
               <span className="text-saffron">Products</span>
             </h1>
             <p className="text-white/80 text-lg normal-case font-medium leading-relaxed mb-6 max-w-lg">
-              AI-curated high-demand affiliate products — Tech, Lifestyle &
-              Wellness — with verified quality scores and expert reviews.
+              AI-curated high-demand affiliate products \u2014 Tech, Lifestyle
+              &amp; Wellness \u2014 with verified quality scores and expert
+              reviews.
             </p>
             <p className="text-saffron text-5xl font-black uppercase tracking-widest mb-10 drop-shadow-lg">
               One World One Future
@@ -483,7 +493,7 @@ export default function HomePage() {
               </p>
               <p className="text-muted-foreground text-sm normal-case leading-relaxed mb-6">
                 Every product receives an AI-generated quality score and expert
-                review — so you always know exactly what you're promoting.
+                review \u2014 so you always know exactly what you're promoting.
               </p>
               <div className="flex items-center gap-3">
                 {[1, 2, 3, 4, 5].map((s) => (

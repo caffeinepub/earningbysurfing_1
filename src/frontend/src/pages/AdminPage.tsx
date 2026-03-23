@@ -28,9 +28,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle,
   DollarSign,
+  FileText,
   Flame,
   Globe,
   LayoutDashboard,
@@ -53,7 +55,6 @@ import { toast } from "sonner";
 import type { Product } from "../backend";
 import { SAMPLE_INVENTORY_PRODUCTS } from "../data/sampleInventoryProducts";
 import { useActor } from "../hooks/useActor";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
   Category,
   useAddAutoPostCategory,
@@ -64,7 +65,6 @@ import {
   useCreateProduct,
   useDeleteInventoryProduct,
   useDeleteProduct,
-  useIsAdmin,
   useListAllUsers,
   useLiveVisitorCount,
   useOrders,
@@ -94,7 +94,8 @@ type AdminSection =
   | "globalInsights"
   | "inventory"
   | "vendorRequests"
-  | "orders";
+  | "orders"
+  | "pages";
 
 interface ImportedMember {
   id: number;
@@ -874,6 +875,7 @@ function MembersSection({
     if (!parsed.length) return;
     setMembers(parsed);
     localStorage.setItem("ebs_members", JSON.stringify(parsed));
+    localStorage.setItem("ebs_members_source", "csv");
     setParsed([]);
     setPreview([]);
     setPage(1);
@@ -1642,9 +1644,294 @@ function OrdersSection() {
   );
 }
 
+function PagesCmsSection() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+
+  const pages = [
+    { slug: "about", title: "About Us" },
+    { slug: "contact", title: "Contact Us" },
+    { slug: "terms", title: "Terms & Conditions" },
+    { slug: "privacy", title: "Privacy Policy" },
+  ];
+
+  const [selectedSlug, setSelectedSlug] = useState<string>(pages[0].slug);
+  const [editorHtml, setEditorHtml] = useState<string>("");
+  const [pageTitle, setPageTitle] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  const { data: allPages, isLoading } = useQuery({
+    queryKey: ["allPageContents"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllPageContents();
+    },
+    enabled: !!actor,
+  });
+
+  // Populate editor when page selection or data changes
+
+  if (!initialized && allPages && allPages.length >= 0) {
+    const found = allPages.find(([slug]) => slug === selectedSlug);
+    if (found) {
+      setPageTitle(found[1].title);
+      setEditorHtml(found[1].content);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = found[1].content;
+      }
+    }
+    setInitialized(true);
+  }
+
+  function selectPage(slug: string) {
+    setSelectedSlug(slug);
+    setInitialized(false);
+    const found = allPages?.find(([s]) => s === slug);
+    const html = found ? found[1].content : "";
+    const title = found
+      ? found[1].title
+      : (pages.find((p) => p.slug === slug)?.title ?? "");
+    setEditorHtml(html);
+    setPageTitle(title);
+    setTimeout(() => {
+      if (editorRef.current) {
+        editorRef.current.innerHTML = html;
+      }
+    }, 0);
+  }
+
+  function execCmd(cmd: string, value?: string) {
+    document.execCommand(cmd, false, value);
+    editorRef.current?.focus();
+    setEditorHtml(editorRef.current?.innerHTML ?? "");
+  }
+
+  async function handleSave() {
+    if (!actor) return;
+    setSaving(true);
+    try {
+      const html = editorRef.current?.innerHTML ?? editorHtml;
+      await actor.setPageContent(selectedSlug, {
+        title: pageTitle,
+        content: html,
+      });
+      qc.invalidateQueries({ queryKey: ["allPageContents"] });
+      qc.invalidateQueries({ queryKey: ["pageContent", selectedSlug] });
+      toast.success("Page saved successfully!");
+    } catch {
+      toast.error("Failed to save page.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const selectedPageMeta = pages.find((p) => p.slug === selectedSlug);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      data-ocid="pages.section"
+    >
+      <h2 className="text-2xl font-black uppercase tracking-wide text-saffron mb-6">
+        Pages &amp; Content
+      </h2>
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Page selector */}
+        <div className="lg:w-56 flex-shrink-0">
+          <div className="bg-white border border-border rounded-xl overflow-hidden shadow-sm">
+            <div className="px-4 py-3 bg-[#FF9933]/5 border-b border-border">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#FF9933]">
+                Select Page
+              </p>
+            </div>
+            {pages.map((page) => (
+              <button
+                key={page.slug}
+                type="button"
+                onClick={() => selectPage(page.slug)}
+                className={`w-full text-left px-4 py-3 text-sm font-semibold transition-colors border-b border-border last:border-0 ${
+                  selectedSlug === page.slug
+                    ? "bg-[#FF9933] text-white"
+                    : "text-foreground hover:bg-[#FF9933]/5 hover:text-[#FF9933]"
+                }`}
+                data-ocid="pages.tab"
+              >
+                {page.title}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Editor */}
+        <div className="flex-1">
+          <Card className="shadow-card" data-ocid="pages.panel">
+            <CardHeader className="border-b border-border pb-4">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <CardTitle className="text-sm uppercase tracking-widest text-saffron">
+                  Editing: {selectedPageMeta?.title}
+                </CardTitle>
+                <a
+                  href={`/${selectedSlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-[#FF9933] underline font-semibold uppercase tracking-wider"
+                >
+                  Preview &rarr;
+                </a>
+              </div>
+              <div className="mt-3">
+                <Label className="text-xs uppercase tracking-widest font-bold mb-1 block">
+                  Page Title
+                </Label>
+                <Input
+                  value={pageTitle}
+                  onChange={(e) => setPageTitle(e.target.value)}
+                  placeholder="Page title..."
+                  className="mt-1"
+                  data-ocid="pages.input"
+                />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {isLoading ? (
+                <div className="space-y-3" data-ocid="pages.loading_state">
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-40 w-full" />
+                </div>
+              ) : (
+                <>
+                  {/* Toolbar */}
+                  <div className="flex flex-wrap gap-1 mb-2 p-2 bg-gray-50 border border-border rounded-lg">
+                    {[
+                      {
+                        cmd: "bold",
+                        label: "B",
+                        title: "Bold",
+                        style: "font-bold",
+                      },
+                      {
+                        cmd: "italic",
+                        label: "I",
+                        title: "Italic",
+                        style: "italic",
+                      },
+                      {
+                        cmd: "underline",
+                        label: "U",
+                        title: "Underline",
+                        style: "underline",
+                      },
+                    ].map((btn) => (
+                      <button
+                        key={btn.cmd}
+                        type="button"
+                        title={btn.title}
+                        onClick={() => execCmd(btn.cmd)}
+                        className={`px-2.5 py-1 text-xs border border-[#FF9933]/30 rounded hover:bg-[#FF9933] hover:text-white transition-colors font-semibold ${btn.style}`}
+                        data-ocid="pages.button"
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                    <div className="w-px bg-border mx-1" />
+                    <button
+                      type="button"
+                      title="Heading 2"
+                      onClick={() => execCmd("formatBlock", "H2")}
+                      className="px-2.5 py-1 text-xs border border-[#FF9933]/30 rounded hover:bg-[#FF9933] hover:text-white transition-colors font-bold"
+                      data-ocid="pages.button"
+                    >
+                      H2
+                    </button>
+                    <button
+                      type="button"
+                      title="Heading 3"
+                      onClick={() => execCmd("formatBlock", "H3")}
+                      className="px-2.5 py-1 text-xs border border-[#FF9933]/30 rounded hover:bg-[#FF9933] hover:text-white transition-colors font-bold"
+                      data-ocid="pages.button"
+                    >
+                      H3
+                    </button>
+                    <button
+                      type="button"
+                      title="Paragraph"
+                      onClick={() => execCmd("formatBlock", "P")}
+                      className="px-2.5 py-1 text-xs border border-[#FF9933]/30 rounded hover:bg-[#FF9933] hover:text-white transition-colors"
+                      data-ocid="pages.button"
+                    >
+                      ¶
+                    </button>
+                    <div className="w-px bg-border mx-1" />
+                    <button
+                      type="button"
+                      title="Unordered List"
+                      onClick={() => execCmd("insertUnorderedList")}
+                      className="px-2.5 py-1 text-xs border border-[#FF9933]/30 rounded hover:bg-[#FF9933] hover:text-white transition-colors"
+                      data-ocid="pages.button"
+                    >
+                      • List
+                    </button>
+                    <button
+                      type="button"
+                      title="Ordered List"
+                      onClick={() => execCmd("insertOrderedList")}
+                      className="px-2.5 py-1 text-xs border border-[#FF9933]/30 rounded hover:bg-[#FF9933] hover:text-white transition-colors"
+                      data-ocid="pages.button"
+                    >
+                      1. List
+                    </button>
+                  </div>
+
+                  {/* Content editable */}
+                  <div
+                    ref={editorRef}
+                    contentEditable
+                    suppressContentEditableWarning
+                    onInput={() =>
+                      setEditorHtml(editorRef.current?.innerHTML ?? "")
+                    }
+                    className="min-h-[300px] border border-border rounded-lg p-4 text-sm leading-relaxed outline-none focus:border-[#FF9933] focus:ring-1 focus:ring-[#FF9933] prose prose-sm max-w-none prose-headings:text-[#FF9933]"
+                    data-ocid="pages.editor"
+                    style={{ direction: "ltr" }}
+                  />
+
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="mt-4 bg-[#FF9933] text-white font-bold uppercase tracking-widest text-xs w-full hover:bg-orange-600"
+                    data-ocid="pages.save_button"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Page
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function AdminPage() {
-  const { identity } = useInternetIdentity();
-  const { data: isAdmin, isLoading: checkingAdmin } = useIsAdmin();
+  const [isAdminAuthed, setIsAdminAuthed] = useState(
+    () => localStorage.getItem("ebs_admin_auth") === "true",
+  );
+  const [pwInput, setPwInput] = useState("");
+  const [pwError, setPwError] = useState(false);
   const [section, setSection] = useState<AdminSection>("dashboard");
   const [addOpen, setAddOpen] = useState(false);
 
@@ -1674,48 +1961,72 @@ export default function AdminPage() {
     setSettingsInit(true);
   }
 
-  if (!identity) {
+  if (!isAdminAuthed) {
     return (
       <main
-        className="min-h-screen flex items-center justify-center bg-muted/30"
+        className="min-h-screen flex items-center justify-center bg-white"
         data-ocid="admin.page"
       >
-        <div className="text-center" data-ocid="admin.error_state">
-          <h2 className="text-2xl font-black uppercase text-saffron">
-            Login Required
-          </h2>
-          <p className="text-muted-foreground mt-2 normal-case">
-            You must be logged in to access the admin panel.
-          </p>
-        </div>
-      </main>
-    );
-  }
-
-  if (checkingAdmin) {
-    return (
-      <main
-        className="min-h-screen flex items-center justify-center"
-        data-ocid="admin.loading_state"
-      >
-        <Loader2 className="h-8 w-8 animate-spin text-saffron" />
-      </main>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <main
-        className="min-h-screen flex items-center justify-center bg-muted/30"
-        data-ocid="admin.page"
-      >
-        <div className="text-center" data-ocid="admin.error_state">
-          <h2 className="text-2xl font-black uppercase text-destructive">
-            Access Denied
-          </h2>
-          <p className="text-muted-foreground mt-2 normal-case">
-            You do not have admin privileges to access this panel.
-          </p>
+        <div className="w-full max-w-md px-6">
+          <div className="text-center mb-8">
+            <h1
+              className="text-3xl font-black tracking-widest uppercase"
+              style={{ color: "#FF9933" }}
+            >
+              EarningBySurfing
+            </h1>
+          </div>
+          <div className="bg-white border border-[#FF9933]/30 rounded-2xl shadow-xl p-8">
+            <h2 className="text-xl font-black uppercase tracking-wide text-center mb-1">
+              Admin Panel Login
+            </h2>
+            <p className="text-sm text-muted-foreground text-center mb-6">
+              Enter your admin password to continue
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (pwInput === "Admin@EBS2026") {
+                  localStorage.setItem("ebs_admin_auth", "true");
+                  setIsAdminAuthed(true);
+                  setPwError(false);
+                } else {
+                  setPwError(true);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <Input
+                  type="password"
+                  placeholder="Enter admin password"
+                  value={pwInput}
+                  onChange={(e) => {
+                    setPwInput(e.target.value);
+                    setPwError(false);
+                  }}
+                  className="border-[#FF9933]/40 focus-visible:ring-[#FF9933]"
+                  data-ocid="admin.input"
+                />
+                {pwError && (
+                  <p
+                    className="text-destructive text-xs mt-2 font-semibold"
+                    data-ocid="admin.error_state"
+                  >
+                    Incorrect password. Please try again.
+                  </p>
+                )}
+              </div>
+              <Button
+                type="submit"
+                className="w-full font-black uppercase tracking-widest text-white"
+                style={{ backgroundColor: "#FF9933" }}
+                data-ocid="admin.submit_button"
+              >
+                Login
+              </Button>
+            </form>
+          </div>
         </div>
       </main>
     );
@@ -1736,6 +2047,7 @@ export default function AdminPage() {
     { id: "vendorRequests", label: "Vendor Requests", icon: Store },
     { id: "orders", label: "Orders", icon: ShoppingBag },
     { id: "settings", label: "Settings", icon: Settings },
+    { id: "pages", label: "Pages", icon: FileText },
   ];
 
   const dashStats = [
@@ -1750,12 +2062,27 @@ export default function AdminPage() {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-border flex flex-col shadow-xs">
         <div className="bg-saffron text-white px-6 py-5">
-          <h1 className="text-sm font-black uppercase tracking-widest">
-            Admin Panel
-          </h1>
-          <p className="text-white/70 text-xs normal-case mt-1">
-            EarningBySurfing
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-sm font-black uppercase tracking-widest">
+                Admin Panel
+              </h1>
+              <p className="text-white/70 text-xs normal-case mt-1">
+                EarningBySurfing
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.removeItem("ebs_admin_auth");
+                setIsAdminAuthed(false);
+              }}
+              className="text-xs font-bold uppercase tracking-widest border border-white/60 rounded px-2 py-1 hover:bg-white/10 transition-colors"
+              data-ocid="admin.close_button"
+            >
+              Logout
+            </button>
+          </div>
         </div>
         <nav className="flex-1 py-4">
           {navItems.map((item) => (
@@ -2099,6 +2426,9 @@ export default function AdminPage() {
               </Card>
             </motion.div>
           )}
+
+          {/* Pages CMS */}
+          {section === "pages" && <PagesCmsSection />}
         </div>
       </div>
     </main>

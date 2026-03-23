@@ -12,9 +12,6 @@ import Time "mo:core/Time";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-
-
-
 actor {
   type Category = {
     #tech;
@@ -24,6 +21,18 @@ actor {
     #shoesAndClothes;
     #technology;
     #toys;
+  };
+
+  public type PageSlug = {
+    #about;
+    #contact;
+    #terms;
+    #privacy;
+  };
+
+  public type PageContent = {
+    title : Text;
+    content : Text;
   };
 
   public type Product = {
@@ -55,7 +64,7 @@ actor {
     affiliateLink : Text;
   };
 
-  public type ProductId = Nat;
+  type ProductId = Nat;
 
   let seedProducts : [Product] = [
     {
@@ -274,7 +283,7 @@ actor {
     ("RENPHO Eye Massager with Heat", 49.99, "Wellness", "https://www.amazon.com/s?k=RENPHO+Eye+Massager")
   ];
 
-  public type VendorRequest = {
+  type VendorRequest = {
     id : Nat;
     vendorName : Text;
     businessName : Text;
@@ -288,7 +297,7 @@ actor {
     submittedAt : Time.Time;
   };
 
-  public type Order = {
+  type Order = {
     id : Nat;
     productName : Text;
     memberIndex : Nat;
@@ -303,6 +312,7 @@ actor {
   let userProfiles = Map.empty<Principal, UserProfile>();
   let vendorRequests = Map.empty<Nat, VendorRequest>();
   let orders = Map.empty<Nat, Order>();
+  let pageContents = Map.empty<Text, PageContent>();
 
   // State
   var visitorCount : Nat = 0;
@@ -341,8 +351,33 @@ actor {
     };
   };
 
+  func initPageContents() {
+    if (pageContents.size() == 0) {
+      pageContents.add("about", {
+        title = "About EarningBySurfing";
+        content = "Earning by surfing is a decentralized platform on the Internet Computer (ICP) designed to help users earn cryptocurrency rewards by viewing and interacting with online content. Our mission is to create a fair and transparent ecosystem where both advertisers and users benefit, ensuring that your attention is valued and rewarded.";
+      });
+
+      pageContents.add("contact", {
+        title = "Contact";
+        content = "If you have any questions, feedback, or need support, please reach out to us at [support@earningbysurfing.com].";
+      });
+
+      pageContents.add("terms", {
+        title = "Terms & Conditions";
+        content = "By using this platform, you agree to comply with our terms and conditions, which outline the rules and guidelines for participating in the earning by surfing ecosystem.";
+      });
+
+      pageContents.add("privacy", {
+        title = "Privacy Policy";
+        content = "We are committed to protecting your privacy. This policy explains how we collect, use, and safeguard your personal information while you use our platform.";
+      });
+    };
+  };
+
   initProducts();
   initInventory();
+  initPageContents();
 
   func updateLiveVisitors() {
     let currentTime = Time.now();
@@ -370,6 +405,23 @@ actor {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only members can perform this action");
     };
+  };
+
+  // Pages/CMS Functionality
+  public query func getPageContent(slug : Text) : async ?PageContent {
+    pageContents.get(slug);
+  };
+
+  public query func getAllPageContents() : async [(Text, PageContent)] {
+    pageContents.entries().toArray();
+  };
+
+  public shared ({ caller }) func setPageContent(slug : Text, content : PageContent) : async () {
+    enforceAdmin(caller);
+    if (not pageContents.containsKey(slug)) {
+      Runtime.trap("Page does not exist. You can only update existing CMS pages" # slug);
+    };
+    pageContents.add(slug, content);
   };
 
   // Product CRUD Operations (Admin only)

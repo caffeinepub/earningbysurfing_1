@@ -31,6 +31,7 @@ export interface Order {
   'timestamp' : Time,
   'memberIndex' : bigint,
 }
+export interface PageContent { 'title' : string, 'content' : string }
 export interface Product {
   'title' : string,
   'featured' : boolean,
@@ -80,6 +81,7 @@ export interface _SERVICE {
     [],
     Array<[bigint, InventoryProduct]>
   >,
+  'getAllPageContents' : ActorMethod<[], Array<[string, PageContent]>>,
   'getAllProducts' : ActorMethod<[], Array<[ProductId, Product]>>,
   'getAutoPostCategories' : ActorMethod<[], Array<string>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
@@ -90,6 +92,7 @@ export interface _SERVICE {
     [] | [{ 'joinDate' : Time, 'activityCount' : bigint }]
   >,
   'getOrders' : ActorMethod<[], Array<[bigint, Order]>>,
+  'getPageContent' : ActorMethod<[string], [] | [PageContent]>,
   'getProduct' : ActorMethod<[bigint], [] | [Product]>,
   'getProductsByCategory' : ActorMethod<
     [Category],
@@ -106,6 +109,7 @@ export interface _SERVICE {
   'removeAutoPostCategory' : ActorMethod<[string], undefined>,
   'resetRoundRobinIndex' : ActorMethod<[], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'setPageContent' : ActorMethod<[string, PageContent], undefined>,
   'submitOrder' : ActorMethod<[string, bigint], bigint>,
   'submitVendorRequest' : ActorMethod<[VendorRequest], bigint>,
   'trackVisitor' : ActorMethod<[], undefined>,

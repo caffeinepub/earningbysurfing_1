@@ -153,7 +153,7 @@ export default function Navbar() {
     { labelKey: "HOME", to: "/" },
     { labelKey: "SHOP ALL", to: "/" },
     { labelKey: "TRENDING", to: "/" },
-    { labelKey: "ABOUT", to: "/" },
+    { labelKey: "ABOUT", to: "/about" },
   ];
 
   return (
@@ -170,11 +170,13 @@ export default function Navbar() {
       {/* Main nav row */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
-          {/* Brand */}
+          {/* Brand Logo */}
           <Link to="/" className="flex-shrink-0" data-ocid="nav.link">
-            <span className="text-lg font-black uppercase tracking-widest text-[#FF9933]">
-              EarningBySurfing
-            </span>
+            <img
+              src="/assets/generated/earning-by-surfing-logo-transparent.dim_1200x600.png"
+              alt="EarningBySurfing"
+              className="h-10 w-auto max-w-[200px] object-contain"
+            />
           </Link>
 
           {/* Desktop Nav Links */}

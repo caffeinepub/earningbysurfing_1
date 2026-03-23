@@ -25,6 +25,10 @@ export interface SiteSettings {
     siteTitle: string;
     announcementText: string;
 }
+export interface PageContent {
+    title: string;
+    content: string;
+}
 export interface InventoryProduct {
     id: bigint;
     name: string;
@@ -77,6 +81,7 @@ export interface backendInterface {
     deleteInventoryProduct(id: bigint): Promise<void>;
     deleteProduct(productId: bigint): Promise<void>;
     getAllInventoryProducts(): Promise<Array<[bigint, InventoryProduct]>>;
+    getAllPageContents(): Promise<Array<[string, PageContent]>>;
     getAllProducts(): Promise<Array<[ProductId, Product]>>;
     getAutoPostCategories(): Promise<Array<string>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
@@ -87,6 +92,7 @@ export interface backendInterface {
         activityCount: bigint;
     } | null>;
     getOrders(): Promise<Array<[bigint, Order]>>;
+    getPageContent(slug: string): Promise<PageContent | null>;
     getProduct(productId: bigint): Promise<Product | null>;
     getProductsByCategory(category: Category): Promise<Array<[ProductId, Product]>>;
     getRoundRobinIndex(): Promise<bigint>;
@@ -100,6 +106,7 @@ export interface backendInterface {
     removeAutoPostCategory(category: string): Promise<void>;
     resetRoundRobinIndex(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    setPageContent(slug: string, content: PageContent): Promise<void>;
     submitOrder(productName: string, totalMembers: bigint): Promise<bigint>;
     submitVendorRequest(newRequest: VendorRequest): Promise<bigint>;
     trackVisitor(): Promise<void>;
