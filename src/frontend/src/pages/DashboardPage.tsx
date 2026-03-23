@@ -26,9 +26,10 @@ import {
   X,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useMemberAuth } from "../hooks/useMemberAuth";
 import { useAllInventoryProducts } from "../hooks/useQueries";
 import { getDailyBatch } from "../utils/dailyBatch";
 
@@ -250,7 +251,7 @@ function StatCard({
   value,
   delay,
 }: {
-  icon: React.ElementType;
+  icon: React.FC<{ className?: string }>;
   label: string;
   value: string;
   delay: number;
@@ -407,7 +408,7 @@ interface TrendingTopic {
 
 interface PlatformData {
   name: string;
-  Icon: React.ElementType;
+  Icon: React.FC<{ className?: string }>;
   topics: TrendingTopic[];
 }
 
@@ -751,17 +752,17 @@ export default function DashboardPage() {
   const { data: inventoryProducts = [], isLoading: productsLoading } =
     useAllInventoryProducts();
 
-  const [currentMember, setCurrentMember] = useState<MemberRecord | null>(
-    () => {
-      const stored = localStorage.getItem("ebs_current_member");
-      if (!stored) return null;
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return null;
-      }
-    },
-  );
+  const { member: memberSession, logoutMember } = useMemberAuth();
+  const [currentMember, setCurrentMember] = useState<MemberRecord | null>(null);
+
+  // Sync currentMember from shared auth hook
+  useEffect(() => {
+    if (memberSession) {
+      setCurrentMember(memberSession as MemberRecord);
+    } else {
+      setCurrentMember(null);
+    }
+  }, [memberSession]);
 
   const [earningsData, setEarningsData] = useState<EarningsData>({
     totalEarned: 0,
@@ -771,8 +772,7 @@ export default function DashboardPage() {
   });
 
   const handleLogout = () => {
-    localStorage.removeItem("ebs_current_member");
-    setCurrentMember(null);
+    logoutMember();
     toast.success("Logged out successfully.");
   };
 

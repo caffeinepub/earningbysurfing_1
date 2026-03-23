@@ -15,6 +15,7 @@ import { motion } from "motion/react";
 import { Suspense, lazy } from "react";
 import { toast } from "sonner";
 import { Category } from "../backend";
+import { HeroErrorBoundary } from "../components/HeroErrorBoundary";
 import { CURATED_PRODUCTS } from "../data/curatedProducts";
 import {
   useAllProducts,
@@ -180,7 +181,7 @@ const CATEGORY_DATA: Record<
   },
   "Pet Tech": {
     description:
-      "Smart feeders, GPS trackers, and health monitors for pets \u2014 a multi-billion dollar affiliate category.",
+      "Smart feeders, GPS trackers, and health monitors for pets — a multi-billion dollar affiliate category.",
     supplierSearch: "https://www.amazon.com/s?k=pet+tech+gadgets",
   },
   "Digital Tools": {
@@ -222,8 +223,7 @@ function GlobalBestSellers() {
             Global Best Sellers
           </h2>
           <p className="text-sm text-muted-foreground normal-case mb-4">
-            Handpicked trending categories \u2014 curated globally, available
-            now
+            Handpicked trending categories — curated globally, available now
           </p>
           <div className="w-16 h-1 bg-saffron mx-auto rounded-full" />
         </motion.div>
@@ -249,7 +249,7 @@ function GlobalBestSellers() {
                     className="absolute top-0 left-0 right-0 flex items-center justify-center py-2 text-white text-xs font-black uppercase tracking-[0.2em]"
                     style={{ backgroundColor: "#FF9933" }}
                   >
-                    \u2605 Best Seller
+                    ★ Best Seller
                   </div>
                   <CardContent className="pt-14 pb-6">
                     <h3 className="text-lg font-black uppercase tracking-wide text-foreground mb-2">
@@ -317,16 +317,22 @@ export default function HomePage() {
           style={{
             background:
               "linear-gradient(135deg, #1a0a00 0%, #3d1f00 40%, #6b3800 70%, #ff9933 130%)",
+            zIndex: 0,
           }}
         />
-        <div className="hero-gradient absolute inset-0" />
+        <div className="hero-gradient absolute inset-0" style={{ zIndex: 1 }} />
 
-        {/* 3D Looping Animation — canvas particles + rings, sits above gradient, below text */}
-        <Suspense fallback={null}>
-          <HeroAnimation />
-        </Suspense>
+        {/* 3D Animation — React Three Fiber canvas, above gradient, below text */}
+        <HeroErrorBoundary>
+          <Suspense fallback={null}>
+            <HeroAnimation />
+          </Suspense>
+        </HeroErrorBoundary>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div
+          className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
+          style={{ zIndex: 10 }}
+        >
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -344,9 +350,8 @@ export default function HomePage() {
               <span className="text-saffron">Products</span>
             </h1>
             <p className="text-white/80 text-lg normal-case font-medium leading-relaxed mb-6 max-w-lg">
-              AI-curated high-demand affiliate products \u2014 Tech, Lifestyle
-              &amp; Wellness \u2014 with verified quality scores and expert
-              reviews.
+              AI-curated high-demand affiliate products — Tech, Lifestyle &amp;
+              Wellness — with verified quality scores and expert reviews.
             </p>
             <p className="text-saffron text-5xl font-black uppercase tracking-widest mb-10 drop-shadow-lg">
               One World One Future
@@ -373,7 +378,7 @@ export default function HomePage() {
 
         <div
           className="absolute bottom-0 left-0 right-0 h-16 bg-white"
-          style={{ clipPath: "ellipse(55% 100% at 50% 100%)" }}
+          style={{ clipPath: "ellipse(55% 100% at 50% 100%)", zIndex: 11 }}
         />
       </section>
 
@@ -493,7 +498,7 @@ export default function HomePage() {
               </p>
               <p className="text-muted-foreground text-sm normal-case leading-relaxed mb-6">
                 Every product receives an AI-generated quality score and expert
-                review \u2014 so you always know exactly what you're promoting.
+                review — so you always know exactly what you&apos;re promoting.
               </p>
               <div className="flex items-center gap-3">
                 {[1, 2, 3, 4, 5].map((s) => (

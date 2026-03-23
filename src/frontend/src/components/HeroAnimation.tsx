@@ -1,212 +1,207 @@
-import { useEffect, useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
+import * as THREE from "three";
 
-interface Particle {
-  x: number;
-  y: number;
-  z: number;
-  vx: number;
-  vy: number;
-  vz: number;
-  radius: number;
-  color: string;
-  alpha: number;
-  alphaSpeed: number;
-}
+// ─── Wave Ocean ────────────────────────────────────────────────────────────────
+function WaveOcean() {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const timeRef = useRef(0);
 
-interface Ring {
-  angle: number;
-  tilt: number;
-  radiusX: number;
-  radiusY: number;
-  thickness: number;
-  color: string;
-  rotationSpeed: number;
-  bobOffset: number;
-  bobSpeed: number;
-  bobAmplitude: number;
-}
-
-const SAFFRON_COLORS = [
-  "255, 153, 51",
-  "255, 180, 80",
-  "230, 120, 20",
-  "255, 210, 100",
-  "255, 240, 150",
-];
-
-export default function HeroAnimation() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let width = canvas.offsetWidth;
-    let height = canvas.offsetHeight;
-    canvas.width = width;
-    canvas.height = height;
-
-    const PARTICLE_COUNT = 260;
-    const particles: Particle[] = [];
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const color =
-        SAFFRON_COLORS[Math.floor(Math.random() * SAFFRON_COLORS.length)];
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        z: Math.random(),
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: -(Math.random() * 0.6 + 0.15),
-        vz: (Math.random() - 0.5) * 0.002,
-        radius: Math.random() * 2.5 + 0.5,
-        color,
-        alpha: Math.random() * 0.6 + 0.2,
-        alphaSpeed: (Math.random() - 0.5) * 0.008,
-      });
+  useFrame((_, delta) => {
+    timeRef.current += delta;
+    const t = timeRef.current;
+    const mesh = meshRef.current;
+    if (!mesh) return;
+    const geo = mesh.geometry as THREE.BufferGeometry;
+    const pos = geo.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const z = pos.getZ(i);
+      const y =
+        Math.sin(x * 0.4 + t * 0.8) * 0.6 + Math.sin(z * 0.3 + t * 0.6) * 0.4;
+      pos.setY(i, y);
     }
-
-    const makeRings = (w: number, h: number): Ring[] => [
-      {
-        angle: 0,
-        tilt: 0.4,
-        radiusX: Math.min(w, h) * 0.28,
-        radiusY: Math.min(w, h) * 0.1,
-        thickness: 4,
-        color: "255, 153, 51",
-        rotationSpeed: 0.006,
-        bobOffset: 0,
-        bobSpeed: 0.02,
-        bobAmplitude: 12,
-      },
-      {
-        angle: Math.PI * 0.5,
-        tilt: 0.6,
-        radiusX: Math.min(w, h) * 0.18,
-        radiusY: Math.min(w, h) * 0.07,
-        thickness: 2.5,
-        color: "255, 200, 80",
-        rotationSpeed: -0.009,
-        bobOffset: 1.2,
-        bobSpeed: 0.015,
-        bobAmplitude: 8,
-      },
-      {
-        angle: Math.PI,
-        tilt: 0.25,
-        radiusX: Math.min(w, h) * 0.38,
-        radiusY: Math.min(w, h) * 0.13,
-        thickness: 1.5,
-        color: "230, 120, 20",
-        rotationSpeed: 0.004,
-        bobOffset: 2.4,
-        bobSpeed: 0.025,
-        bobAmplitude: 15,
-      },
-    ];
-
-    let rings = makeRings(width, height);
-    let t = 0;
-    let animationFrameId: number;
-
-    const drawRing = (ring: Ring, cx: number, cy: number) => {
-      const bob =
-        Math.sin(t * ring.bobSpeed + ring.bobOffset) * ring.bobAmplitude;
-      const steps = 200;
-      ctx.beginPath();
-      for (let i = 0; i <= steps; i++) {
-        const theta = (i / steps) * Math.PI * 2 + ring.angle;
-        const px = cx + Math.cos(theta) * ring.radiusX;
-        const py =
-          cy + bob + Math.sin(theta) * ring.radiusY * Math.cos(ring.tilt);
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = `rgba(${ring.color}, 0.8)`;
-      ctx.strokeStyle = `rgba(${ring.color}, 0.6)`;
-      ctx.lineWidth = ring.thickness;
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-    };
-
-    const draw = () => {
-      t++;
-      ctx.clearRect(0, 0, width, height);
-
-      for (const ring of rings) {
-        ring.angle += ring.rotationSpeed;
-      }
-
-      const cx = width * 0.72;
-      const cy = height * 0.45;
-
-      for (const ring of rings) {
-        drawRing(ring, cx, cy);
-      }
-
-      for (const p of particles) {
-        const depthScale = 0.5 + p.z * 0.5;
-        const r = p.radius * depthScale;
-
-        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3);
-        gradient.addColorStop(0, `rgba(${p.color}, ${p.alpha})`);
-        gradient.addColorStop(1, `rgba(${p.color}, 0)`);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, r * 3, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.color}, ${Math.min(p.alpha * 1.6, 1)})`;
-        ctx.fill();
-
-        p.x += p.vx;
-        p.y += p.vy;
-        p.z += p.vz;
-        p.z = Math.max(0, Math.min(1, p.z));
-        p.alpha += p.alphaSpeed;
-        if (p.alpha > 0.85 || p.alpha < 0.1) p.alphaSpeed *= -1;
-
-        if (p.y < -20) {
-          p.y = height + 10;
-          p.x = Math.random() * width;
-        }
-        if (p.x < -20) p.x = width + 10;
-        if (p.x > width + 20) p.x = -10;
-      }
-
-      animationFrameId = requestAnimationFrame(draw);
-    };
-
-    animationFrameId = requestAnimationFrame(draw);
-
-    const onResize = () => {
-      width = canvas.offsetWidth;
-      height = canvas.offsetHeight;
-      canvas.width = width;
-      canvas.height = height;
-      for (const p of particles) {
-        p.x = Math.random() * width;
-        p.y = Math.random() * height;
-      }
-      rings = makeRings(width, height);
-    };
-
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener("resize", onResize);
-    };
-  }, []);
+    pos.needsUpdate = true;
+    geo.computeVertexNormals();
+  });
 
   return (
-    <canvas
-      ref={canvasRef}
+    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+      <planeGeometry args={[80, 40, 50, 25]} />
+      <meshStandardMaterial
+        color="#FF9933"
+        metalness={0.3}
+        roughness={0.6}
+        transparent
+        opacity={0.55}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  );
+}
+
+// ─── Surfboard ─────────────────────────────────────────────────────────────────
+function Surfboard() {
+  const boardRef = useRef<THREE.Mesh>(null);
+  const timeRef = useRef(0);
+
+  useFrame((_, delta) => {
+    timeRef.current += delta;
+    const t = timeRef.current;
+    const board = boardRef.current;
+    if (!board) return;
+    board.position.y = 1.2 + Math.sin(t * 1.1) * 0.25;
+    board.rotation.y += 0.003;
+    board.rotation.x = Math.sin(t * 0.7) * 0.08;
+  });
+
+  return (
+    <mesh ref={boardRef} position={[0, 1.2, 0]} scale={[1, 0.18, 1]}>
+      <capsuleGeometry args={[0.4, 3.5, 8, 16]} />
+      <meshStandardMaterial
+        color="#FFD700"
+        metalness={0.9}
+        roughness={0.1}
+        emissive="#FF9933"
+        emissiveIntensity={0.3}
+      />
+    </mesh>
+  );
+}
+
+// ─── Glowing Particles ─────────────────────────────────────────────────────────
+const PARTICLE_COUNT = 180;
+
+function GlowParticles() {
+  const instancedRef = useRef<THREE.InstancedMesh>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+
+  const particleData = useMemo(() => {
+    return Array.from({ length: PARTICLE_COUNT }, () => ({
+      x: (Math.random() - 0.5) * 40,
+      y: Math.random() * 5 - 1,
+      z: Math.random() * 20 - 15,
+      speed: 0.015 + Math.random() * 0.03,
+    }));
+  }, []);
+
+  useFrame(() => {
+    const mesh = instancedRef.current;
+    if (!mesh) return;
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const p = particleData[i];
+      p.y += p.speed;
+      if (p.y > 5) {
+        p.y = -1;
+        p.x = (Math.random() - 0.5) * 40;
+        p.z = Math.random() * 20 - 15;
+      }
+      dummy.position.set(p.x, p.y, p.z);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <instancedMesh
+      ref={instancedRef}
+      args={[undefined, undefined, PARTICLE_COUNT]}
+    >
+      <sphereGeometry args={[0.06, 6, 6]} />
+      <meshBasicMaterial color="#FFCC44" />
+    </instancedMesh>
+  );
+}
+
+// ─── Data Streams ──────────────────────────────────────────────────────────────
+const STREAM_CONFIG = [
+  { x: -8, z: -5 },
+  { x: -14, z: 2 },
+  { x: 5, z: -8 },
+  { x: 12, z: -3 },
+  { x: -3, z: 4 },
+  { x: 9, z: 6 },
+];
+
+function DataStream({
+  x,
+  z,
+  offset,
+}: { x: number; z: number; offset: number }) {
+  const ref = useRef<THREE.Mesh>(null);
+  const timeRef = useRef(offset);
+
+  useFrame((_, delta) => {
+    timeRef.current += delta * 0.5;
+    const mesh = ref.current;
+    if (!mesh) return;
+    mesh.position.y = ((timeRef.current % 8) - 4) * 1.2;
+  });
+
+  return (
+    <mesh ref={ref} position={[x, 0, z]}>
+      <cylinderGeometry args={[0.012, 0.012, 6, 6]} />
+      <meshBasicMaterial color="#FF9933" transparent opacity={0.5} />
+    </mesh>
+  );
+}
+
+function DataStreams() {
+  return (
+    <>
+      {STREAM_CONFIG.map((cfg, i) => (
+        <DataStream
+          key={`stream-${cfg.x}-${cfg.z}`}
+          x={cfg.x}
+          z={cfg.z}
+          offset={i * 1.3}
+        />
+      ))}
+    </>
+  );
+}
+
+// ─── Scene ─────────────────────────────────────────────────────────────────────
+function Scene() {
+  return (
+    <>
+      <fog attach="fog" args={["#1a0a00", 18, 45]} />
+      <ambientLight intensity={0.4} />
+      <pointLight
+        position={[5, 8, 3]}
+        color="#FF9933"
+        intensity={60}
+        distance={30}
+      />
+      <pointLight
+        position={[-6, 5, -2]}
+        color="#FFD700"
+        intensity={40}
+        distance={25}
+      />
+      <pointLight
+        position={[0, 3, 8]}
+        color="#ffffff"
+        intensity={20}
+        distance={20}
+      />
+      <WaveOcean />
+      <Surfboard />
+      <GlowParticles />
+      <DataStreams />
+    </>
+  );
+}
+
+// ─── Main Export ───────────────────────────────────────────────────────────────
+export default function HeroAnimation() {
+  return (
+    <Canvas
+      dpr={[1, 1.5]}
+      camera={{ position: [0, 5, 14], fov: 55 }}
+      gl={{ alpha: true, antialias: false }}
+      frameloop="always"
       style={{
         position: "absolute",
         inset: 0,
@@ -215,6 +210,8 @@ export default function HeroAnimation() {
         pointerEvents: "none",
         zIndex: 2,
       }}
-    />
+    >
+      <Scene />
+    </Canvas>
   );
 }

@@ -3,8 +3,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Globe, Heart, Menu, Search, ShoppingCart, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ACTIVE_LANGUAGES, useLanguage } from "../contexts/LanguageContext";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
-import { useIsAdmin } from "../hooks/useQueries";
+import { useMemberAuth } from "../hooks/useMemberAuth";
+import MemberLoginModal from "./MemberLoginModal";
 
 function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
   const { language, setLanguage, currentOption } = useLanguage();
@@ -13,7 +13,6 @@ function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Close on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -62,7 +61,6 @@ function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
           } mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden`}
           style={{ width: mobile ? "100%" : "220px" }}
         >
-          {/* Search input */}
           <div className="p-2 border-b border-gray-100">
             <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5">
               <Search className="h-3 w-3 text-gray-400 flex-shrink-0" />
@@ -86,7 +84,6 @@ function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
             </div>
           </div>
 
-          {/* Header count */}
           <div className="px-3 py-1 bg-[#FF9933]/5 border-b border-gray-100">
             <span className="text-[10px] text-[#FF9933] font-semibold uppercase tracking-wider">
               {filtered.length} language{filtered.length !== 1 ? "s" : ""}{" "}
@@ -94,7 +91,6 @@ function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
             </span>
           </div>
 
-          {/* Language list */}
           <div className="overflow-y-auto" style={{ maxHeight: "260px" }}>
             {filtered.length === 0 ? (
               <div className="px-4 py-3 text-xs text-gray-400 text-center">
@@ -126,7 +122,6 @@ function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
             )}
           </div>
 
-          {/* Pakistan blocked notice */}
           <div className="px-3 py-1.5 border-t border-gray-100 bg-red-50">
             <span className="text-[9px] text-red-400 font-medium">
               ⛔ Pakistan traffic restricted
@@ -138,16 +133,41 @@ function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
   );
 }
 
+function useAdminAuth() {
+  const [isAdminAuthed, setIsAdminAuthed] = useState(() => {
+    return localStorage.getItem("ebs_admin_auth") === "true";
+  });
+
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === "ebs_admin_auth") {
+        setIsAdminAuthed(e.newValue === "true");
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  // Also poll on focus so same-tab admin login is reflected
+  useEffect(() => {
+    function onFocus() {
+      setIsAdminAuthed(localStorage.getItem("ebs_admin_auth") === "true");
+    }
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+
+  return isAdminAuthed;
+}
+
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _navigate = useNavigate();
-  const { login, clear, identity, loginStatus } = useInternetIdentity();
-  const { data: isAdmin } = useIsAdmin();
+  const { member, loginMember, logoutMember } = useMemberAuth();
+  const isAdminAuthed = useAdminAuth();
   const { t } = useLanguage();
-
-  const isLoggedIn = !!identity;
-  const isLoggingIn = loginStatus === "logging-in";
 
   const navLinks = [
     { labelKey: "HOME", to: "/" },
@@ -159,11 +179,12 @@ export default function Navbar() {
   return (
     <header className="bg-white border-b border-border sticky top-0 z-50">
       {/* Top utility strip */}
-      <div className="bg-[#FF9933] text-white text-center text-xs font-semibold tracking-widest py-1.5 uppercase">
-        EarningBySurfing &mdash; Premium Products &amp; Exclusive Deals
-        <span className="mx-3 opacity-60">|</span>
-        <span className="italic font-bold tracking-[0.2em] text-white/95">
-          ❆ {t("One World One Future")} ❆
+      <div
+        className="bg-[#FF9933] text-white text-center py-1.5"
+        style={{ letterSpacing: "0.15em" }}
+      >
+        <span className="text-[11px] font-bold uppercase tracking-[0.18em]">
+          ❆ One World One Future ❆
         </span>
       </div>
 
@@ -174,7 +195,7 @@ export default function Navbar() {
           <Link to="/" className="flex-shrink-0" data-ocid="nav.link">
             <img
               src="/assets/generated/earning-by-surfing-logo-transparent.dim_1200x600.png"
-              alt="EarningBySurfing"
+              alt="EarningBySurfing — One World One Future"
               className="h-10 w-auto max-w-[200px] object-contain"
             />
           </Link>
@@ -198,7 +219,7 @@ export default function Navbar() {
             >
               Become a Vendor
             </Link>
-            {isLoggedIn && (
+            {member && (
               <Link
                 to="/dashboard"
                 className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors"
@@ -207,10 +228,10 @@ export default function Navbar() {
                 {t("DASHBOARD")}
               </Link>
             )}
-            {isAdmin && (
+            {isAdminAuthed && (
               <Link
                 to="/admin"
-                className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors"
+                className="text-xs font-semibold uppercase tracking-widest text-[#FF9933] hover:text-orange-600 transition-colors"
                 data-ocid="nav.link"
               >
                 {t("ADMIN")}
@@ -250,12 +271,12 @@ export default function Navbar() {
             >
               <ShoppingCart className="h-5 w-5" />
             </button>
-            {isLoggedIn ? (
+            {member ? (
               <Button
                 variant="outline"
                 size="sm"
                 className="border-[#FF9933] text-[#FF9933] hover:bg-[#FF9933] hover:text-white text-xs uppercase tracking-wider font-bold"
-                onClick={() => clear()}
+                onClick={() => logoutMember()}
                 data-ocid="nav.button"
               >
                 {t("LOGOUT")}
@@ -264,11 +285,10 @@ export default function Navbar() {
               <Button
                 size="sm"
                 className="bg-[#FF9933] hover:bg-orange-600 text-white text-xs uppercase tracking-wider font-bold"
-                onClick={() => login()}
-                disabled={isLoggingIn}
+                onClick={() => setLoginOpen(true)}
                 data-ocid="nav.button"
               >
-                {isLoggingIn ? "LOGGING IN..." : t("LOGIN")}
+                {t("LOGIN")}
               </Button>
             )}
           </div>
@@ -312,7 +332,7 @@ export default function Navbar() {
           >
             Become a Vendor
           </Link>
-          {isLoggedIn && (
+          {member && (
             <Link
               to="/dashboard"
               className="text-sm font-semibold uppercase tracking-widest text-[#FF9933] py-2"
@@ -322,7 +342,7 @@ export default function Navbar() {
               {t("DASHBOARD")}
             </Link>
           )}
-          {isAdmin && (
+          {isAdminAuthed && (
             <Link
               to="/admin"
               className="text-sm font-semibold uppercase tracking-widest text-[#FF9933] py-2"
@@ -336,12 +356,12 @@ export default function Navbar() {
             <LanguageDropdown mobile />
           </div>
           <div className="pt-2 border-t border-border">
-            {isLoggedIn ? (
+            {member ? (
               <Button
                 variant="outline"
                 className="w-full border-[#FF9933] text-[#FF9933] font-bold uppercase tracking-wider"
                 onClick={() => {
-                  clear();
+                  logoutMember();
                   setMenuOpen(false);
                 }}
                 data-ocid="nav.button"
@@ -352,7 +372,7 @@ export default function Navbar() {
               <Button
                 className="w-full bg-[#FF9933] text-white font-bold uppercase tracking-wider"
                 onClick={() => {
-                  login();
+                  setLoginOpen(true);
                   setMenuOpen(false);
                 }}
                 data-ocid="nav.button"
@@ -363,6 +383,16 @@ export default function Navbar() {
           </div>
         </div>
       )}
+
+      {/* Member Login Modal */}
+      <MemberLoginModal
+        open={loginOpen}
+        onOpenChange={setLoginOpen}
+        onLogin={(m) => {
+          loginMember(m);
+          setLoginOpen(false);
+        }}
+      />
     </header>
   );
 }

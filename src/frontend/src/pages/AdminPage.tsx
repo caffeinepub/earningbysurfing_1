@@ -2035,7 +2035,7 @@ export default function AdminPage() {
   const navItems: {
     id: AdminSection;
     label: string;
-    icon: React.ElementType;
+    icon: React.FC<{ className?: string }>;
   }[] = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "products", label: "Products", icon: Package },
