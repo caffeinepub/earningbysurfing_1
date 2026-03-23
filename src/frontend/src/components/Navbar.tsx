@@ -190,13 +190,19 @@ export default function Navbar() {
       {/* Main nav row */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-4">
-          {/* Brand Logo — scaled 50% wider for maximum prominence */}
-          <Link to="/" className="flex-shrink-0" data-ocid="nav.link">
+          {/* Brand Logo — 300px wide, sharp, premium, never squished */}
+          <Link to="/" style={{ flexShrink: 0 }} data-ocid="nav.link">
             <img
               src="/assets/generated/earning-by-surfing-logo-transparent.dim_1200x600.png"
               alt="EarningBySurfing — One World One Future"
-              className="h-14 w-auto object-contain"
-              style={{ maxWidth: "600px", minWidth: "240px" }}
+              style={{
+                width: "300px",
+                maxWidth: "300px",
+                height: "70px",
+                objectFit: "contain",
+                imageRendering: "auto",
+                display: "block",
+              }}
             />
           </Link>
 
