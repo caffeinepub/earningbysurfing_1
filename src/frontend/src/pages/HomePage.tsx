@@ -350,8 +350,9 @@ export default function HomePage() {
               <span className="text-saffron">Products</span>
             </h1>
             <p className="text-white/80 text-lg normal-case font-medium leading-relaxed mb-6 max-w-lg">
-              AI-curated high-demand affiliate products — Tech, Lifestyle &amp;
-              Wellness — with verified quality scores and expert reviews.
+              AI-curated high-demand affiliate products &mdash; Tech, Lifestyle
+              &amp; Wellness &mdash; with verified quality scores and expert
+              reviews.
             </p>
             <p className="text-saffron text-5xl font-black uppercase tracking-widest mb-10 drop-shadow-lg">
               One World One Future

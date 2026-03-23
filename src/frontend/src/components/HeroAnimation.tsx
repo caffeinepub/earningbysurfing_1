@@ -1,6 +1,13 @@
+import { useLoader } from "@react-three/fiber";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
+
+// NASA Blue Marble texture (via unpkg CDN — three-globe package)
+const NASA_TEXTURE_URL =
+  "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
+const NASA_CLOUDS_URL =
+  "https://unpkg.com/three-globe/example/img/earth-clouds.png";
 
 // ─── Wave Ocean ────────────────────────────────────────────────────────────────
 function WaveOcean() {
@@ -69,48 +76,243 @@ function Surfboard() {
   );
 }
 
-// ─── Glowing Particles ─────────────────────────────────────────────────────────
-const PARTICLE_COUNT = 180;
+// ─── NASA Globe (with satellite texture from CDN) ─────────────────────────────
+function NASAGlobe() {
+  const earthTexture = useLoader(THREE.TextureLoader, NASA_TEXTURE_URL);
+  const cloudTexture = useLoader(THREE.TextureLoader, NASA_CLOUDS_URL);
+  const globeRef = useRef<THREE.Mesh>(null);
+  const cloudsRef = useRef<THREE.Mesh>(null);
 
-function GlowParticles() {
-  const instancedRef = useRef<THREE.InstancedMesh>(null);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-
-  const particleData = useMemo(() => {
-    return Array.from({ length: PARTICLE_COUNT }, () => ({
-      x: (Math.random() - 0.5) * 40,
-      y: Math.random() * 5 - 1,
-      z: Math.random() * 20 - 15,
-      speed: 0.015 + Math.random() * 0.03,
-    }));
-  }, []);
-
-  useFrame(() => {
-    const mesh = instancedRef.current;
-    if (!mesh) return;
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const p = particleData[i];
-      p.y += p.speed;
-      if (p.y > 5) {
-        p.y = -1;
-        p.x = (Math.random() - 0.5) * 40;
-        p.z = Math.random() * 20 - 15;
-      }
-      dummy.position.set(p.x, p.y, p.z);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(i, dummy.matrix);
-    }
-    mesh.instanceMatrix.needsUpdate = true;
+  useFrame((_, delta) => {
+    if (globeRef.current) globeRef.current.rotation.y += delta * 0.2;
+    if (cloudsRef.current) cloudsRef.current.rotation.y += delta * 0.25;
   });
 
   return (
-    <instancedMesh
-      ref={instancedRef}
-      args={[undefined, undefined, PARTICLE_COUNT]}
-    >
-      <sphereGeometry args={[0.06, 6, 6]} />
-      <meshBasicMaterial color="#FFCC44" />
-    </instancedMesh>
+    <>
+      {/* Atmosphere outer glow */}
+      <mesh position={[6, 3, -5]} scale={1.08}>
+        <sphereGeometry args={[3, 32, 32]} />
+        <meshBasicMaterial
+          color="#6aafff"
+          transparent
+          opacity={0.07}
+          side={THREE.BackSide}
+        />
+      </mesh>
+
+      {/* Earth sphere with NASA texture */}
+      <mesh ref={globeRef} position={[6, 3, -5]}>
+        <sphereGeometry args={[3, 64, 64]} />
+        <meshPhongMaterial
+          map={earthTexture}
+          specular={new THREE.Color(0x333333)}
+          shininess={18}
+        />
+      </mesh>
+
+      {/* Cloud layer */}
+      <mesh ref={cloudsRef} position={[6, 3, -5]} scale={1.015}>
+        <sphereGeometry args={[3, 48, 48]} />
+        <meshPhongMaterial
+          map={cloudTexture}
+          transparent
+          opacity={0.4}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Sunlight from top-right */}
+      <pointLight
+        position={[14, 8, 2]}
+        color="#fff5e0"
+        intensity={60}
+        distance={30}
+      />
+    </>
+  );
+}
+
+// ─── Fallback Globe (canvas-painted, shown while texture loads) ───────────────
+function FallbackGlobe() {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const texture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#1a4d8f";
+    ctx.fillRect(0, 0, 512, 256);
+    ctx.fillStyle = "#2d7a3c";
+    // Basic continent blobs
+    ctx.beginPath();
+    ctx.ellipse(170, 110, 60, 55, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(280, 90, 110, 45, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(80, 80, 55, 40, 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(105, 145, 30, 45, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(390, 155, 45, 30, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    return new THREE.CanvasTexture(canvas);
+  }, []);
+
+  useFrame((_, delta) => {
+    if (meshRef.current) meshRef.current.rotation.y += delta * 0.2;
+  });
+
+  return (
+    <mesh ref={meshRef} position={[6, 3, -5]}>
+      <sphereGeometry args={[3, 48, 48]} />
+      <meshStandardMaterial map={texture} metalness={0.1} roughness={0.7} />
+    </mesh>
+  );
+}
+
+// ─── Currency Texture ──────────────────────────────────────────────────────────
+function makeCurrencyTexture(symbol: string, color = "#FFD700"): THREE.Texture {
+  const canvas = document.createElement("canvas");
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext("2d")!;
+
+  // Metallic disc
+  const grad = ctx.createRadialGradient(48, 44, 4, 64, 64, 58);
+  grad.addColorStop(0, color === "#FFD700" ? "#fff7a0" : "#f0f0f0");
+  grad.addColorStop(0.5, color);
+  grad.addColorStop(1, color === "#FFD700" ? "#a07000" : "#888888");
+
+  ctx.beginPath();
+  ctx.arc(64, 64, 56, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Rim
+  ctx.strokeStyle = color === "#FFD700" ? "#c09000" : "#666666";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Symbol — use smaller font for multi-char symbols like د.إ
+  const isMultiChar = [...symbol].length > 1;
+  ctx.font = `bold ${isMultiChar ? 36 : 52}px Arial, sans-serif`;
+  ctx.fillStyle = "rgba(0,0,0,0.7)";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(symbol, 64, 68);
+
+  return new THREE.CanvasTexture(canvas);
+}
+
+// ─── Orbiting Currency Tokens ─────────────────────────────────────────────────
+const ORBIT_CONFIG = [
+  {
+    symbol: "\u20b9",
+    color: "#FFD700",
+    radius: 4.5,
+    speed: 0.7,
+    phase: 0,
+    tilt: 0.3,
+  },
+  {
+    symbol: "\u062f.\u0625",
+    color: "#FFD700",
+    radius: 5.0,
+    speed: 0.55,
+    phase: 1.05,
+    tilt: 0.45,
+  },
+  {
+    symbol: "$",
+    color: "#C0C0C0",
+    radius: 5.2,
+    speed: 0.5,
+    phase: 2.09,
+    tilt: -0.4,
+  },
+  {
+    symbol: "\u20ac",
+    color: "#FFD700",
+    radius: 4.8,
+    speed: 0.8,
+    phase: 3.14,
+    tilt: 0.6,
+  },
+  {
+    symbol: "\u00a3",
+    color: "#C0C0C0",
+    radius: 5.5,
+    speed: 0.6,
+    phase: 4.19,
+    tilt: -0.2,
+  },
+  {
+    symbol: "\u00a5",
+    color: "#FFD700",
+    radius: 4.2,
+    speed: 0.9,
+    phase: 5.24,
+    tilt: 0.5,
+  },
+];
+
+const GLOBE_CENTER = new THREE.Vector3(6, 3, -5);
+
+function OrbitingToken({
+  symbol,
+  color,
+  radius,
+  speed,
+  phase,
+  tilt,
+}: {
+  symbol: string;
+  color: string;
+  radius: number;
+  speed: number;
+  phase: number;
+  tilt: number;
+}) {
+  const spriteRef = useRef<THREE.Sprite>(null);
+  const timeRef = useRef(phase);
+  const texture = useMemo(
+    () => makeCurrencyTexture(symbol, color),
+    [symbol, color],
+  );
+
+  useFrame((_, delta) => {
+    timeRef.current += delta * speed;
+    const t = timeRef.current;
+    const x = GLOBE_CENTER.x + Math.cos(t) * radius;
+    const y = GLOBE_CENTER.y + Math.sin(t) * Math.sin(tilt) * radius * 0.5;
+    const z = GLOBE_CENTER.z + Math.sin(t) * radius * Math.cos(tilt);
+    if (spriteRef.current) spriteRef.current.position.set(x, y, z);
+  });
+
+  return (
+    <sprite ref={spriteRef} scale={[1.2, 1.2, 1.2]}>
+      <spriteMaterial
+        map={texture}
+        transparent
+        opacity={0.92}
+        depthWrite={false}
+      />
+    </sprite>
+  );
+}
+
+function OrbitingCurrencyTokens() {
+  return (
+    <>
+      {ORBIT_CONFIG.map((cfg) => (
+        <OrbitingToken key={cfg.symbol} {...cfg} />
+      ))}
+    </>
   );
 }
 
@@ -167,7 +369,7 @@ function Scene() {
   return (
     <>
       <fog attach="fog" args={["#1a0a00", 18, 45]} />
-      <ambientLight intensity={0.4} />
+      <ambientLight intensity={0.5} />
       <pointLight
         position={[5, 8, 3]}
         color="#FF9933"
@@ -188,7 +390,10 @@ function Scene() {
       />
       <WaveOcean />
       <Surfboard />
-      <GlowParticles />
+      <Suspense fallback={<FallbackGlobe />}>
+        <NASAGlobe />
+      </Suspense>
+      <OrbitingCurrencyTokens />
       <DataStreams />
     </>
   );

@@ -24,6 +24,7 @@ export default function MemberLoginModal({
   onLogin,
 }: MemberLoginModalProps) {
   const [value, setValue] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -35,6 +36,12 @@ export default function MemberLoginModal({
     const input = value.trim();
     if (!input) {
       setError("Please enter your Member ID or email.");
+      setLoading(false);
+      return;
+    }
+
+    if (!password.trim()) {
+      setError("Please enter your password.");
       setLoading(false);
       return;
     }
@@ -65,8 +72,17 @@ export default function MemberLoginModal({
         return;
       }
 
+      if (password.trim() !== String(found.id)) {
+        setError(
+          "Incorrect password. Your default password is your Member ID.",
+        );
+        setLoading(false);
+        return;
+      }
+
       onLogin(found);
       setValue("");
+      setPassword("");
       setError("");
       onOpenChange(false);
     } catch {
@@ -105,6 +121,24 @@ export default function MemberLoginModal({
             />
           </div>
 
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="member-password-input"
+              className="text-sm font-semibold text-foreground"
+            >
+              Password
+            </Label>
+            <Input
+              id="member-password-input"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="border-[#FF9933]/40 focus-visible:ring-[#FF9933] focus-visible:border-[#FF9933]"
+              data-ocid="member_login.input"
+            />
+          </div>
+
           {error && (
             <p
               className="text-sm text-red-500 font-medium"
@@ -124,7 +158,7 @@ export default function MemberLoginModal({
           </Button>
 
           <p className="text-center text-xs text-muted-foreground">
-            Use your Member ID (1–4000) or registered email address.
+            Use your Member ID (1–4000) as your default password.
           </p>
         </form>
       </DialogContent>

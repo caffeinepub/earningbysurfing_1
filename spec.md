@@ -1,33 +1,32 @@
-# EarningBySurfing — Version 22 (Login Stability Fix)
+# EarningBySurfing — Version 22.1
 
 ## Current State
-
-Three disconnected auth systems exist simultaneously:
-
-1. **Admin login** (`AdminPage.tsx`) — password `Admin@EBS2026` → `localStorage("ebs_admin_auth")` — works correctly.
-2. **Member login** (`DashboardPage.tsx` `MemberLoginGate`) — Member ID/email → `localStorage("ebs_members")` — works only if user navigates directly to `/dashboard`.
-3. **Navbar LOGIN button** (`Navbar.tsx`) — calls `useInternetIdentity().login()` which opens an ICP popup — broken for all regular members.
-
-The Admin link in the Navbar never appears because `useIsAdmin()` calls `actor.isCallerAdmin()` on the ICP backend, which returns false for all users since no one is logged in via Internet Identity.
+- Hero globe uses a canvas-painted texture (makeEarthTexture) with manually drawn continent shapes
+- Currency tokens: ₹, $, €, £, ¥ (5 tokens) orbiting the globe
+- Login system: password-based for both members (default: Member ID) and admin (Admin@EBS2026) — already correct
+- Logo: 50% wider, left-aligned — already correct
+- Sub-headline in HomePage uses &mdash; HTML entity — already correct
 
 ## Requested Changes (Diff)
 
 ### Add
-- A shared `useMemberAuth` hook (or context) that reads/writes `localStorage("ebs_member_session")` — stores `{ id, name, email }` of the logged-in member.
-- A `MemberLoginModal` component (dialog) that accepts Member ID or email input, validates against `localStorage("ebs_members")`, and saves the session on success.
+- NASA Blue Marble satellite texture loaded via CDN (unpkg.com/three-globe) using THREE.TextureLoader + useLoader hook
+- UAE Dirham token (د.إ) as a 6th orbiting currency symbol (gold color)
+- Specular/normalMap-style lighting on the globe for more photorealistic depth
+- Atmosphere glow layer around the globe (thin blue halo)
 
 ### Modify
-- **Navbar.tsx**: Remove `useInternetIdentity()` and `useIsAdmin()`. Replace with `useMemberAuth()`. The LOGIN button opens `MemberLoginModal`. LOGOUT clears the member session. Admin link shows when `localStorage("ebs_admin_auth") === "true"`.
-- **DashboardPage.tsx**: Use the shared `useMemberAuth()` hook instead of its own isolated login gate — so a member who logs in from the Navbar is already authenticated on the Dashboard.
+- TangibleGlobe: replace makeEarthTexture() canvas painting with real satellite texture loaded from CDN
+- ORBIT_CONFIG: add د.إ entry alongside existing 5 currencies
+- Globe geometry: increase segment count to 64x64 for smoother sphere at high texture resolution
 
 ### Remove
-- All `useInternetIdentity()` calls from `Navbar.tsx`.
-- All `useIsAdmin()` ICP-based calls from `Navbar.tsx`.
+- makeEarthTexture() canvas drawing function (no longer needed once CDN texture loads)
 
 ## Implementation Plan
-
-1. Create `src/frontend/src/hooks/useMemberAuth.ts` — a simple hook that reads/writes `localStorage("ebs_member_session")` with `{ id, name, email }`. Exposes `member`, `loginMember(record)`, `logoutMember()`.
-2. Create `src/frontend/src/components/MemberLoginModal.tsx` — a shadcn Dialog with a Member ID or email input field that validates against `localStorage("ebs_members")` and calls `loginMember()` on success. Shows error on invalid input.
-3. Update `Navbar.tsx` — replace Internet Identity with `useMemberAuth()`. LOGIN button opens the modal. Show DASHBOARD link and LOGOUT when member is logged in. Show ADMIN link when `localStorage("ebs_admin_auth") === "true"`.
-4. Update `DashboardPage.tsx` — replace local `MemberLoginGate` with `useMemberAuth()` so sessions are shared with Navbar.
-5. Validate, typecheck, and build.
+1. Import `useLoader` from `@react-three/fiber`
+2. In TangibleGlobe, use `useLoader(THREE.TextureLoader, NASA_URL)` to load Blue Marble texture
+3. Keep makeEarthTexture as fallback in case CDN fails (render inside ErrorBoundary)
+4. Update ORBIT_CONFIG with UAE Dirham entry (6th token)
+5. Tune globe material: increase metalness slightly, add emissive for atmosphere glow
+6. Validate build
