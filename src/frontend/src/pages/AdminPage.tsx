@@ -59,6 +59,7 @@ import {
   Category,
   useAddAutoPostCategory,
   useAddInventoryProduct,
+  useAffiliateConfigStatus,
   useAllInventoryProducts,
   useAllProducts,
   useAutoPostCategories,
@@ -1947,9 +1948,15 @@ export default function AdminPage() {
   const { mutate: updateSettings, isPending: savingSettings } =
     useUpdateSiteSettings();
 
+  const { data: affiliateStatus } = useAffiliateConfigStatus();
   const [settingsForm, setSettingsForm] = useState({
     siteTitle: "",
     announcementText: "",
+    clickbankApiKey: "",
+    clickbankClerkId: "",
+    amazonAccessKey: "",
+    amazonSecretKey: "",
+    amazonAssociateTag: "",
   });
   const [settingsInit, setSettingsInit] = useState(false);
 
@@ -1957,6 +1964,11 @@ export default function AdminPage() {
     setSettingsForm({
       siteTitle: siteSettings.siteTitle,
       announcementText: siteSettings.announcementText,
+      clickbankApiKey: siteSettings.clickbankApiKey || "",
+      clickbankClerkId: siteSettings.clickbankClerkId || "",
+      amazonAccessKey: siteSettings.amazonAccessKey || "",
+      amazonSecretKey: siteSettings.amazonSecretKey || "",
+      amazonAssociateTag: siteSettings.amazonAssociateTag || "",
     });
     setSettingsInit(true);
   }
@@ -2402,6 +2414,143 @@ export default function AdminPage() {
                           data-ocid="settings.textarea"
                         />
                       </div>
+                      {/* Affiliate API Configuration */}
+                      <div className="pt-4 border-t border-border">
+                        <p className="text-xs font-black uppercase tracking-widest text-saffron mb-3">
+                          Affiliate API Configuration
+                        </p>
+
+                        {/* ClickBank */}
+                        <div className="mb-4 p-3 rounded-lg border border-[#FF9933]/20 bg-[#FF9933]/5">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                              ClickBank
+                            </span>
+                            {affiliateStatus?.clickbankConfigured ? (
+                              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                                ● Connected
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                                ○ Not Configured
+                              </span>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <div>
+                              <Label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                                API Key
+                              </Label>
+                              <Input
+                                type="password"
+                                value={settingsForm.clickbankApiKey}
+                                onChange={(e) =>
+                                  setSettingsForm((p) => ({
+                                    ...p,
+                                    clickbankApiKey: e.target.value,
+                                  }))
+                                }
+                                placeholder="Enter ClickBank API Key"
+                                className="mt-1 text-xs"
+                                data-ocid="settings.input"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                                Clerk ID
+                              </Label>
+                              <Input
+                                type="password"
+                                value={settingsForm.clickbankClerkId}
+                                onChange={(e) =>
+                                  setSettingsForm((p) => ({
+                                    ...p,
+                                    clickbankClerkId: e.target.value,
+                                  }))
+                                }
+                                placeholder="Enter ClickBank Clerk ID"
+                                className="mt-1 text-xs"
+                                data-ocid="settings.input"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Amazon */}
+                        <div className="p-3 rounded-lg border border-[#FF9933]/20 bg-[#FF9933]/5">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                              Amazon Associates
+                            </span>
+                            {affiliateStatus?.amazonConfigured ? (
+                              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                                ● Connected
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                                ○ Not Configured
+                              </span>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            <div>
+                              <Label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                                Access Key
+                              </Label>
+                              <Input
+                                type="password"
+                                value={settingsForm.amazonAccessKey}
+                                onChange={(e) =>
+                                  setSettingsForm((p) => ({
+                                    ...p,
+                                    amazonAccessKey: e.target.value,
+                                  }))
+                                }
+                                placeholder="Enter Amazon Access Key"
+                                className="mt-1 text-xs"
+                                data-ocid="settings.input"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                                Secret Key
+                              </Label>
+                              <Input
+                                type="password"
+                                value={settingsForm.amazonSecretKey}
+                                onChange={(e) =>
+                                  setSettingsForm((p) => ({
+                                    ...p,
+                                    amazonSecretKey: e.target.value,
+                                  }))
+                                }
+                                placeholder="Enter Amazon Secret Key"
+                                className="mt-1 text-xs"
+                                data-ocid="settings.input"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                                Associate Tag
+                              </Label>
+                              <Input
+                                type="text"
+                                value={settingsForm.amazonAssociateTag}
+                                onChange={(e) =>
+                                  setSettingsForm((p) => ({
+                                    ...p,
+                                    amazonAssociateTag: e.target.value,
+                                  }))
+                                }
+                                placeholder="e.g. yoursite-21"
+                                className="mt-1 text-xs"
+                                data-ocid="settings.input"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
                       <Button
                         type="submit"
                         className="bg-saffron text-white font-bold uppercase tracking-widest text-xs w-full"

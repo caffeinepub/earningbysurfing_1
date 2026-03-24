@@ -159,6 +159,128 @@ function useAdminAuth() {
   return isAdminAuthed;
 }
 
+/** 3-D tilt + gloss-shine logo that reacts to mouse position */
+function Logo3D() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const shineRef = useRef<HTMLDivElement>(null);
+  const [hovered, setHovered] = useState(false);
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2; // -1 … +1
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2; // -1 … +1
+
+    // Tilt: max ±12 degrees
+    const rotX = -y * 12;
+    const rotY = x * 12;
+
+    el.style.transform = `perspective(600px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.04,1.04,1.04)`;
+
+    // Gloss shine position
+    if (shineRef.current) {
+      const px = ((x + 1) / 2) * 100; // 0-100%
+      const py = ((y + 1) / 2) * 100;
+      shineRef.current.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.55) 0%, rgba(255,220,100,0.18) 35%, transparent 65%)`;
+      shineRef.current.style.opacity = "1";
+    }
+  }
+
+  function handleMouseLeave() {
+    const el = containerRef.current;
+    if (el) {
+      el.style.transform =
+        "perspective(600px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)";
+    }
+    if (shineRef.current) {
+      shineRef.current.style.opacity = "0";
+    }
+    setHovered(false);
+  }
+
+  return (
+    <div
+      style={{
+        flexShrink: 0,
+        width: "420px",
+        maxWidth: "420px",
+        padding: 0,
+        /* 3-D stage */
+        perspective: "600px",
+        perspectiveOrigin: "center center",
+      }}
+    >
+      {/* The tiltable card */}
+      <div
+        ref={containerRef}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          position: "relative",
+          width: "100%",
+          cursor: "pointer",
+          transition: hovered
+            ? "none"
+            : "transform 0.5s cubic-bezier(.23,1,.32,1)",
+          transformStyle: "preserve-3d",
+          willChange: "transform",
+          borderRadius: "10px",
+          /* Drop-shadow to simulate depth */
+          filter:
+            "drop-shadow(0 8px 18px rgba(255,153,51,0.45)) drop-shadow(0 2px 4px rgba(0,0,0,0.25))",
+        }}
+      >
+        {/* The actual logo image */}
+        <img
+          src="/assets/generated/ebs-logo-3d-v2.dim_1400x600.png"
+          alt="EarningBySurfing — One World One Future"
+          style={{
+            width: "100%",
+            height: "76px",
+            objectFit: "contain",
+            display: "block",
+            imageRendering: "auto",
+            borderRadius: "10px",
+          }}
+        />
+
+        {/* Gloss / shine overlay */}
+        <div
+          ref={shineRef}
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "10px",
+            opacity: 0,
+            transition: "opacity 0.1s ease",
+            pointerEvents: "none",
+            mixBlendMode: "screen",
+          }}
+        />
+
+        {/* Static bottom bevel shadow line */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: "5%",
+            right: "5%",
+            height: "6px",
+            borderRadius: "0 0 10px 10px",
+            background:
+              "linear-gradient(to right, transparent, rgba(255,153,51,0.6), rgba(255,215,0,0.5), transparent)",
+            filter: "blur(3px)",
+            transform: "translateZ(-2px)",
+            pointerEvents: "none",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -189,31 +311,10 @@ export default function Navbar() {
 
       {/* Main nav row */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-4">
-          {/* Brand Logo — 300px wide, sharp, premium, never squished */}
-          <Link
-            to="/"
-            style={{
-              flexShrink: 0,
-              display: "block",
-              width: "400px",
-              maxWidth: "400px",
-              padding: 0,
-            }}
-            data-ocid="nav.link"
-          >
-            <img
-              src="/assets/generated/earning-by-surfing-logo-transparent.dim_1200x600.png"
-              alt="EarningBySurfing — One World One Future"
-              style={{
-                width: "100% !important" as React.CSSProperties["width"],
-                maxWidth: "400px",
-                height: "70px",
-                objectFit: "contain",
-                imageRendering: "auto",
-                display: "block",
-              }}
-            />
+        <div className="flex items-center justify-between h-24 gap-4">
+          {/* Brand Logo — 3D tilt + shine on hover */}
+          <Link to="/" style={{ textDecoration: "none" }} data-ocid="nav.link">
+            <Logo3D />
           </Link>
 
           {/* Desktop Nav Links */}

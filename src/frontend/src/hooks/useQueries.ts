@@ -379,3 +379,26 @@ export function useSubmitOrder() {
     },
   });
 }
+
+export function useAffiliateConfigStatus() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["affiliateConfigStatus"],
+    queryFn: async () => {
+      if (!actor)
+        return { clickbankConfigured: false, amazonConfigured: false };
+      return actor.getAffiliateConfigStatus();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useFetchClickbankProducts() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async (searchQuery: string) => {
+      if (!actor) throw new Error("No actor");
+      return actor.fetchClickbankProducts(searchQuery);
+    },
+  });
+}

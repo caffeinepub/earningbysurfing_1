@@ -7,11 +7,12 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { generateSeedMembers } from "./data/seedMembers";
+import { useActor } from "./hooks/useActor";
 import AboutPage from "./pages/AboutPage";
 import AdminPage from "./pages/AdminPage";
 import ContactPage from "./pages/ContactPage";
@@ -26,6 +27,86 @@ const queryClient = new QueryClient({
     queries: { staleTime: 1000 * 60 * 5, retry: 1 },
   },
 });
+
+// ─── Pakistan Block Detection ───────────────────────────────────────────────
+
+const PAKISTAN_TIMEZONES = ["Asia/Karachi"];
+const PAKISTAN_LOCALES = ["ur", "ur-PK", "pa-PK"];
+
+function isPakistanBrowser(): boolean {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (PAKISTAN_TIMEZONES.includes(tz)) return true;
+  const lang = navigator.language || "";
+  if (PAKISTAN_LOCALES.some((l) => lang.startsWith(l))) return true;
+  return false;
+}
+
+function getCountryCodeFromTimezone(): string | null {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (PAKISTAN_TIMEZONES.includes(tz)) return "PK";
+  return null;
+}
+
+// ─── Block Screen ────────────────────────────────────────────────────────────
+
+function AccessBlockedScreen() {
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+      style={{ backgroundColor: "#FF9933" }}
+    >
+      <div className="text-center px-8">
+        <div className="text-6xl mb-6">🚫</div>
+        <h1 className="text-4xl font-black text-white uppercase tracking-widest mb-4">
+          Access Restricted
+        </h1>
+        <p className="text-white/90 text-lg font-medium max-w-md">
+          This platform is not available in your region.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Country Gate ─────────────────────────────────────────────────────────────
+
+function CountryGate({ children }: { children: React.ReactNode }) {
+  const { actor, isFetching } = useActor();
+  const [blocked, setBlocked] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Fast browser-level check first
+    if (isPakistanBrowser()) {
+      setBlocked(true);
+      return;
+    }
+
+    // If actor is ready, do backend verification
+    if (!actor || isFetching) return;
+
+    const countryCode = getCountryCodeFromTimezone();
+    if (countryCode) {
+      actor
+        .checkCountryAccess(countryCode)
+        .then((allowed) => {
+          setBlocked(!allowed);
+        })
+        .catch(() => {
+          // On error, do not block
+          setBlocked(false);
+        });
+    } else {
+      // Also check via backend with a generic lookup attempt
+      // For non-PK users, always allow
+      setBlocked(false);
+    }
+  }, [actor, isFetching]);
+
+  // While checking, show nothing (or could show a loading state)
+  if (blocked === null) return null;
+  if (blocked) return <AccessBlockedScreen />;
+  return <>{children}</>;
+}
 
 function RootLayout() {
   return (
@@ -117,8 +198,10 @@ export default function App() {
   return (
     <LanguageProvider>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-        <Toaster richColors position="top-right" />
+        <CountryGate>
+          <RouterProvider router={router} />
+          <Toaster richColors position="top-right" />
+        </CountryGate>
       </QueryClientProvider>
     </LanguageProvider>
   );

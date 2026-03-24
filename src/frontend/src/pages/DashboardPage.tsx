@@ -15,9 +15,11 @@ import {
   ExternalLink,
   Facebook,
   Instagram,
+  Loader2,
   LogOut,
   MessageCircle,
   Package,
+  Search,
   Shield,
   Sparkles,
   Star,
@@ -30,8 +32,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useMemberAuth } from "../hooks/useMemberAuth";
-import { useAllInventoryProducts } from "../hooks/useQueries";
+import {
+  useAllInventoryProducts,
+  useFetchClickbankProducts,
+} from "../hooks/useQueries";
 import { getDailyBatch } from "../utils/dailyBatch";
+import { generateHeadline } from "../utils/headlineEngine";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -580,9 +586,14 @@ function AnalyticsBuyerSection() {
                     className="self-start border border-[#FF9933] text-[#FF9933] text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full hover:bg-[#FF9933] hover:text-white transition-colors"
                     onClick={() => {
                       const key = `${platform.name}-${topic.topic}`;
+                      const headline = generateHeadline(
+                        topic.topic,
+                        topic.engagement,
+                        platform.name,
+                      );
                       setHeadlines((prev) => ({
                         ...prev,
-                        [key]: `🔥 ${topic.topic}: Trending Now — Don't Miss Exclusive Deals!`,
+                        [key]: `🔥 ${headline}`,
                       }));
                     }}
                     data-ocid="analytics.button"
@@ -604,6 +615,182 @@ function AnalyticsBuyerSection() {
         Trending insights are AI-curated estimates. Connect your social accounts
         for live data.
       </p>
+    </section>
+  );
+}
+
+// ─── ClickBank Product Hunter ──────────────────────────────────────────────────
+
+interface ClickbankProduct {
+  site: string;
+  title: string;
+  description: string;
+  commission: string;
+  hoplink: string;
+}
+
+function ClickbankHunterSection({ memberId }: { memberId: number }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<ClickbankProduct[]>([]);
+  const [notConfigured, setNotConfigured] = useState(false);
+  const { mutate: fetchProducts, isPending } = useFetchClickbankProducts();
+
+  function handleFetch() {
+    if (!query.trim()) return;
+    setNotConfigured(false);
+    fetchProducts(query.trim(), {
+      onSuccess: (raw: string) => {
+        if (raw === "API_NOT_CONFIGURED") {
+          setNotConfigured(true);
+          setResults([]);
+          return;
+        }
+        try {
+          const parsed = JSON.parse(raw);
+          setResults(parsed.products || []);
+        } catch {
+          toast.error("Failed to parse ClickBank response.");
+        }
+      },
+      onError: () => toast.error("ClickBank fetch failed. Please try again."),
+    });
+  }
+
+  return (
+    <section className="mb-10" data-ocid="clickbank.section">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.32, duration: 0.5 }}
+        className="mb-6"
+      >
+        <div className="flex items-center gap-3 mb-1">
+          <div className="p-2 bg-saffron/10 rounded-lg">
+            <Sparkles className="h-5 w-5 text-saffron" />
+          </div>
+          <div>
+            <h2 className="text-xl font-black uppercase tracking-widest text-saffron">
+              Live ClickBank Products
+            </h2>
+            <p className="text-xs text-muted-foreground normal-case">
+              Search and promote real affiliate products from ClickBank
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      <div className="flex gap-3 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search products e.g. weight loss, fitness..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleFetch()}
+            className="w-full pl-9 pr-4 py-2 border border-[#FF9933]/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF9933]/50 bg-white"
+            data-ocid="clickbank.search_input"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={handleFetch}
+          disabled={isPending || !query.trim()}
+          className="flex items-center gap-2 px-5 py-2 bg-[#FF9933] text-white font-black uppercase tracking-widest text-xs rounded-lg hover:bg-[#e8891e] disabled:opacity-50 transition-colors"
+          data-ocid="clickbank.primary_button"
+        >
+          {isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Search className="h-4 w-4" />
+          )}
+          {isPending ? "Fetching..." : "Fetch Live Products"}
+        </button>
+      </div>
+
+      {notConfigured && (
+        <div
+          className="rounded-xl border border-[#FF9933]/40 bg-[#FF9933]/10 p-4 mb-4 flex items-start gap-3"
+          data-ocid="clickbank.error_state"
+        >
+          <Sparkles className="h-5 w-5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-[#FF9933] uppercase tracking-wide">
+              ClickBank API Not Configured
+            </p>
+            <p className="text-xs text-muted-foreground normal-case mt-0.5">
+              Go to{" "}
+              <strong>
+                Admin Panel &rarr; Settings &rarr; Affiliate API Configuration
+              </strong>{" "}
+              to add your ClickBank credentials.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {results.length > 0 && (
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          data-ocid="clickbank.list"
+        >
+          {results.map((product, i) => (
+            <motion.div
+              key={`${product.site}-${i}`}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="bg-white rounded-xl border border-border shadow-card overflow-hidden"
+              data-ocid={`clickbank.item.${i + 1}`}
+            >
+              <div className="bg-gradient-to-r from-saffron to-amber-400 px-4 py-2 flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-widest text-white">
+                  ClickBank
+                </span>
+                <Badge className="bg-white/20 text-white text-[9px] border-0">
+                  {product.commission} commission
+                </Badge>
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-sm text-foreground leading-snug mb-2 line-clamp-2">
+                  {product.title}
+                </h3>
+                <p className="text-xs text-muted-foreground normal-case leading-relaxed line-clamp-3 mb-3">
+                  {product.description}
+                </p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                  {product.site}
+                </p>
+                <div className="flex gap-2">
+                  <a
+                    href={`${product.hoplink}?tid=MEMBER_${memberId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1 bg-[#FF9933] text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-lg hover:bg-[#e8891e] transition-colors"
+                    data-ocid={`clickbank.primary_button.${i + 1}`}
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Promote
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {results.length === 0 && !notConfigured && !isPending && (
+        <div
+          className="text-center py-10 rounded-xl border border-dashed border-saffron/30"
+          data-ocid="clickbank.empty_state"
+        >
+          <Sparkles className="h-8 w-8 text-saffron/40 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground normal-case">
+            Enter a keyword and click "Fetch Live Products" to discover
+            ClickBank offers.
+          </p>
+        </div>
+      )}
     </section>
   );
 }
@@ -971,6 +1158,9 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* ─── ClickBank Product Hunter ─── */}
+        <ClickbankHunterSection memberId={currentMember.id} />
 
         {/* ─── Analytics & Buyer Intent ─── */}
         <AnalyticsBuyerSection />

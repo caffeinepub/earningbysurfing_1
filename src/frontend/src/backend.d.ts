@@ -20,10 +20,44 @@ export interface VendorRequest {
     price: number;
     vendorName: string;
 }
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
 export type Time = bigint;
+export interface AffiliateConfigStatus {
+    clickbankConfigured: boolean;
+    amazonConfigured: boolean;
+}
+export interface Order {
+    id: bigint;
+    productName: string;
+    assignedMemberId: string;
+    timestamp: Time;
+    memberIndex: bigint;
+}
+export interface http_header {
+    value: string;
+    name: string;
+}
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
 export interface SiteSettings {
+    amazonAssociateTag: string;
     siteTitle: string;
     announcementText: string;
+    amazonAccessKey: string;
+    clickbankClerkId: string;
+    amazonSecretKey: string;
+    clickbankApiKey: string;
+}
+export interface TransformationInput {
+    context: Uint8Array;
+    response: http_request_result;
 }
 export interface PageContent {
     title: string;
@@ -37,18 +71,6 @@ export interface InventoryProduct {
     price: number;
 }
 export type ProductId = bigint;
-export interface Order {
-    id: bigint;
-    productName: string;
-    assignedMemberId: string;
-    timestamp: Time;
-    memberIndex: bigint;
-}
-export interface UserProfile {
-    joinDate: Time;
-    name: string;
-    activityCount: bigint;
-}
 export interface Product {
     title: string;
     featured: boolean;
@@ -57,6 +79,11 @@ export interface Product {
     imageUrl: string;
     category: Category;
     aiReview: string;
+}
+export interface UserProfile {
+    joinDate: Time;
+    name: string;
+    activityCount: bigint;
 }
 export enum Category {
     shoesAndClothes = "shoesAndClothes",
@@ -76,14 +103,18 @@ export interface backendInterface {
     addAutoPostCategory(category: string): Promise<void>;
     addInventoryProduct(name: string, price: number, category: string, affiliateLink: string): Promise<bigint>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    checkCountryAccess(countryCode: string): Promise<boolean>;
     createProduct(originalProduct: Product): Promise<ProductId>;
     deleteAllProducts(): Promise<void>;
     deleteInventoryProduct(id: bigint): Promise<void>;
     deleteProduct(productId: bigint): Promise<void>;
+    fetchClickbankProducts(searchQuery: string): Promise<string>;
+    getAffiliateConfigStatus(): Promise<AffiliateConfigStatus>;
     getAllInventoryProducts(): Promise<Array<[bigint, InventoryProduct]>>;
     getAllPageContents(): Promise<Array<[string, PageContent]>>;
     getAllProducts(): Promise<Array<[ProductId, Product]>>;
     getAutoPostCategories(): Promise<Array<string>>;
+    getBlockedCountries(): Promise<Array<string>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getLiveVisitorCount(): Promise<bigint>;
@@ -110,6 +141,8 @@ export interface backendInterface {
     submitOrder(productName: string, totalMembers: bigint): Promise<bigint>;
     submitVendorRequest(newRequest: VendorRequest): Promise<bigint>;
     trackVisitor(): Promise<void>;
+    transform(input: TransformationInput): Promise<TransformationOutput>;
+    updateBlockedCountries(newCountries: Array<string>): Promise<void>;
     updateInventoryProduct(id: bigint, name: string, price: number, category: string, affiliateLink: string): Promise<void>;
     updateProduct(productId: bigint, product: Product): Promise<void>;
     updateSiteSettings(newSettings: SiteSettings): Promise<void>;

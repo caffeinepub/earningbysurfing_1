@@ -32,6 +32,10 @@ export const Product = IDL.Record({
   'aiReview' : IDL.Text,
 });
 export const ProductId = IDL.Nat;
+export const AffiliateConfigStatus = IDL.Record({
+  'clickbankConfigured' : IDL.Bool,
+  'amazonConfigured' : IDL.Bool,
+});
 export const InventoryProduct = IDL.Record({
   'id' : IDL.Nat,
   'name' : IDL.Text,
@@ -57,8 +61,13 @@ export const Order = IDL.Record({
   'memberIndex' : IDL.Nat,
 });
 export const SiteSettings = IDL.Record({
+  'amazonAssociateTag' : IDL.Text,
   'siteTitle' : IDL.Text,
   'announcementText' : IDL.Text,
+  'amazonAccessKey' : IDL.Text,
+  'clickbankClerkId' : IDL.Text,
+  'amazonSecretKey' : IDL.Text,
+  'clickbankApiKey' : IDL.Text,
 });
 export const VendorRequest = IDL.Record({
   'id' : IDL.Nat,
@@ -73,6 +82,24 @@ export const VendorRequest = IDL.Record({
   'price' : IDL.Float64,
   'vendorName' : IDL.Text,
 });
+export const http_header = IDL.Record({
+  'value' : IDL.Text,
+  'name' : IDL.Text,
+});
+export const http_request_result = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
+export const TransformationInput = IDL.Record({
+  'context' : IDL.Vec(IDL.Nat8),
+  'response' : http_request_result,
+});
+export const TransformationOutput = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -83,10 +110,13 @@ export const idlService = IDL.Service({
       [],
     ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'checkCountryAccess' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   'createProduct' : IDL.Func([Product], [ProductId], []),
   'deleteAllProducts' : IDL.Func([], [], []),
   'deleteInventoryProduct' : IDL.Func([IDL.Nat], [], []),
   'deleteProduct' : IDL.Func([IDL.Nat], [], []),
+  'fetchClickbankProducts' : IDL.Func([IDL.Text], [IDL.Text], []),
+  'getAffiliateConfigStatus' : IDL.Func([], [AffiliateConfigStatus], ['query']),
   'getAllInventoryProducts' : IDL.Func(
       [],
       [IDL.Vec(IDL.Tuple(IDL.Nat, InventoryProduct))],
@@ -103,6 +133,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getAutoPostCategories' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+  'getBlockedCountries' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getLiveVisitorCount' : IDL.Func([], [IDL.Nat], ['query']),
@@ -146,6 +177,12 @@ export const idlService = IDL.Service({
   'submitOrder' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Nat], []),
   'submitVendorRequest' : IDL.Func([VendorRequest], [IDL.Nat], []),
   'trackVisitor' : IDL.Func([], [], []),
+  'transform' : IDL.Func(
+      [TransformationInput],
+      [TransformationOutput],
+      ['query'],
+    ),
+  'updateBlockedCountries' : IDL.Func([IDL.Vec(IDL.Text)], [], []),
   'updateInventoryProduct' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Float64, IDL.Text, IDL.Text],
       [],
@@ -183,6 +220,10 @@ export const idlFactory = ({ IDL }) => {
     'aiReview' : IDL.Text,
   });
   const ProductId = IDL.Nat;
+  const AffiliateConfigStatus = IDL.Record({
+    'clickbankConfigured' : IDL.Bool,
+    'amazonConfigured' : IDL.Bool,
+  });
   const InventoryProduct = IDL.Record({
     'id' : IDL.Nat,
     'name' : IDL.Text,
@@ -205,8 +246,13 @@ export const idlFactory = ({ IDL }) => {
     'memberIndex' : IDL.Nat,
   });
   const SiteSettings = IDL.Record({
+    'amazonAssociateTag' : IDL.Text,
     'siteTitle' : IDL.Text,
     'announcementText' : IDL.Text,
+    'amazonAccessKey' : IDL.Text,
+    'clickbankClerkId' : IDL.Text,
+    'amazonSecretKey' : IDL.Text,
+    'clickbankApiKey' : IDL.Text,
   });
   const VendorRequest = IDL.Record({
     'id' : IDL.Nat,
@@ -221,6 +267,21 @@ export const idlFactory = ({ IDL }) => {
     'price' : IDL.Float64,
     'vendorName' : IDL.Text,
   });
+  const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const http_request_result = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
+  const TransformationInput = IDL.Record({
+    'context' : IDL.Vec(IDL.Nat8),
+    'response' : http_request_result,
+  });
+  const TransformationOutput = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -231,10 +292,17 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'checkCountryAccess' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
     'createProduct' : IDL.Func([Product], [ProductId], []),
     'deleteAllProducts' : IDL.Func([], [], []),
     'deleteInventoryProduct' : IDL.Func([IDL.Nat], [], []),
     'deleteProduct' : IDL.Func([IDL.Nat], [], []),
+    'fetchClickbankProducts' : IDL.Func([IDL.Text], [IDL.Text], []),
+    'getAffiliateConfigStatus' : IDL.Func(
+        [],
+        [AffiliateConfigStatus],
+        ['query'],
+      ),
     'getAllInventoryProducts' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(IDL.Nat, InventoryProduct))],
@@ -251,6 +319,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getAutoPostCategories' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+    'getBlockedCountries' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getLiveVisitorCount' : IDL.Func([], [IDL.Nat], ['query']),
@@ -294,6 +363,12 @@ export const idlFactory = ({ IDL }) => {
     'submitOrder' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Nat], []),
     'submitVendorRequest' : IDL.Func([VendorRequest], [IDL.Nat], []),
     'trackVisitor' : IDL.Func([], [], []),
+    'transform' : IDL.Func(
+        [TransformationInput],
+        [TransformationOutput],
+        ['query'],
+      ),
+    'updateBlockedCountries' : IDL.Func([IDL.Vec(IDL.Text)], [], []),
     'updateInventoryProduct' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Float64, IDL.Text, IDL.Text],
         [],

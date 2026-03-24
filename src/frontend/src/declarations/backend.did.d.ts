@@ -10,6 +10,10 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface AffiliateConfigStatus {
+  'clickbankConfigured' : boolean,
+  'amazonConfigured' : boolean,
+}
 export type Category = { 'shoesAndClothes' : null } |
   { 'tech' : null } |
   { 'toys' : null } |
@@ -43,10 +47,24 @@ export interface Product {
 }
 export type ProductId = bigint;
 export interface SiteSettings {
+  'amazonAssociateTag' : string,
   'siteTitle' : string,
   'announcementText' : string,
+  'amazonAccessKey' : string,
+  'clickbankClerkId' : string,
+  'amazonSecretKey' : string,
+  'clickbankApiKey' : string,
 }
 export type Time = bigint;
+export interface TransformationInput {
+  'context' : Uint8Array,
+  'response' : http_request_result,
+}
+export interface TransformationOutput {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export interface UserProfile {
   'joinDate' : Time,
   'name' : string,
@@ -68,15 +86,24 @@ export interface VendorRequest {
   'price' : number,
   'vendorName' : string,
 }
+export interface http_header { 'value' : string, 'name' : string }
+export interface http_request_result {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addAutoPostCategory' : ActorMethod<[string], undefined>,
   'addInventoryProduct' : ActorMethod<[string, number, string, string], bigint>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'checkCountryAccess' : ActorMethod<[string], boolean>,
   'createProduct' : ActorMethod<[Product], ProductId>,
   'deleteAllProducts' : ActorMethod<[], undefined>,
   'deleteInventoryProduct' : ActorMethod<[bigint], undefined>,
   'deleteProduct' : ActorMethod<[bigint], undefined>,
+  'fetchClickbankProducts' : ActorMethod<[string], string>,
+  'getAffiliateConfigStatus' : ActorMethod<[], AffiliateConfigStatus>,
   'getAllInventoryProducts' : ActorMethod<
     [],
     Array<[bigint, InventoryProduct]>
@@ -84,6 +111,7 @@ export interface _SERVICE {
   'getAllPageContents' : ActorMethod<[], Array<[string, PageContent]>>,
   'getAllProducts' : ActorMethod<[], Array<[ProductId, Product]>>,
   'getAutoPostCategories' : ActorMethod<[], Array<string>>,
+  'getBlockedCountries' : ActorMethod<[], Array<string>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getLiveVisitorCount' : ActorMethod<[], bigint>,
@@ -113,6 +141,8 @@ export interface _SERVICE {
   'submitOrder' : ActorMethod<[string, bigint], bigint>,
   'submitVendorRequest' : ActorMethod<[VendorRequest], bigint>,
   'trackVisitor' : ActorMethod<[], undefined>,
+  'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
+  'updateBlockedCountries' : ActorMethod<[Array<string>], undefined>,
   'updateInventoryProduct' : ActorMethod<
     [bigint, string, number, string, string],
     undefined

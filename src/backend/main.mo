@@ -2,16 +2,21 @@ import Float "mo:core/Float";
 import Iter "mo:core/Iter";
 import List "mo:core/List";
 import Map "mo:core/Map";
+import Migration "migration";
 import Nat "mo:core/Nat";
 import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Set "mo:core/Set";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
+import OutCall "http-outcalls/outcall";
 
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
+// Data migration at upgrade
+(with migration = Migration.run)
 actor {
   type Category = {
     #tech;
@@ -54,6 +59,11 @@ actor {
   public type SiteSettings = {
     siteTitle : Text;
     announcementText : Text;
+    clickbankApiKey : Text;
+    clickbankClerkId : Text;
+    amazonAccessKey : Text;
+    amazonSecretKey : Text;
+    amazonAssociateTag : Text;
   };
 
   public type InventoryProduct = {
@@ -65,6 +75,28 @@ actor {
   };
 
   type ProductId = Nat;
+
+  type VendorRequest = {
+    id : Nat;
+    vendorName : Text;
+    businessName : Text;
+    productName : Text;
+    category : Text;
+    description : Text;
+    price : Float;
+    websiteLink : Text;
+    contactEmail : Text;
+    status : Text; // "pending", "approved", "rejected"
+    submittedAt : Time.Time;
+  };
+
+  type Order = {
+    id : Nat;
+    productName : Text;
+    memberIndex : Nat;
+    assignedMemberId : Text;
+    timestamp : Time.Time;
+  };
 
   let seedProducts : [Product] = [
     {
@@ -283,26 +315,11 @@ actor {
     ("RENPHO Eye Massager with Heat", 49.99, "Wellness", "https://www.amazon.com/s?k=RENPHO+Eye+Massager")
   ];
 
-  type VendorRequest = {
-    id : Nat;
-    vendorName : Text;
-    businessName : Text;
-    productName : Text;
-    category : Text;
-    description : Text;
-    price : Float;
-    websiteLink : Text;
-    contactEmail : Text;
-    status : Text; // "pending", "approved", "rejected"
-    submittedAt : Time.Time;
-  };
+  let blockedCountries = Set.fromArray(["PK"]);
 
-  type Order = {
-    id : Nat;
-    productName : Text;
-    memberIndex : Nat;
-    assignedMemberId : Text;
-    timestamp : Time.Time;
+  type AffiliateConfigStatus = {
+    clickbankConfigured : Bool;
+    amazonConfigured : Bool;
   };
 
   let autoPostCategories = List.empty<Text>();
@@ -325,6 +342,11 @@ actor {
   var siteSettings : SiteSettings = {
     siteTitle = "EarningBySurfing";
     announcementText = "Welcome to EarningBySurfing — your AI-powered affiliate platform!";
+    clickbankApiKey = "";
+    clickbankClerkId = "";
+    amazonAccessKey = "";
+    amazonSecretKey = "";
+    amazonAssociateTag = "";
   };
   let visitorTimeout : Int = 1_000_000_000 * 60 * 10;
 
@@ -690,4 +712,64 @@ actor {
     enforceAdmin(caller);
     roundRobinIndex := 1;
   };
+
+  public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
+    OutCall.transform(input);
+  };
+
+  // Affiliate Platform Features
+
+  // Fetch raw ClickBank products JSON using stored credentials (admin only for security)
+  public shared ({ caller }) func fetchClickbankProducts(searchQuery : Text) : async Text {
+    enforceAdmin(caller);
+    if (siteSettings.clickbankApiKey == "" or siteSettings.clickbankClerkId == "") {
+      return "API_NOT_CONFIGURED";
+    };
+
+    let clickbankUrl = "https://api.clickbank.com/rest/1.3/products/list?site=&keywords=" # searchQuery;
+    //let clickbankUrl = "https://rest.api.clickbank.com/rest/1.3/products/list?site=&keywords=" # query; // legacy url fallback
+
+    let authHeaderValue = "CBU username=" # siteSettings.clickbankClerkId # ", CBT apikey=" # siteSettings.clickbankApiKey;
+
+    let headers = [
+      {
+        name = "Authorization";
+        value = authHeaderValue;
+      },
+      {
+        name = "Content-Type";
+        value = "application/json";
+      },
+    ];
+
+    await OutCall.httpGetRequest(clickbankUrl, headers, transform);
+  };
+
+  // Check if a country is blocked
+  public query ({ caller }) func checkCountryAccess(countryCode : Text) : async Bool {
+    not blockedCountries.contains(countryCode.toUpper());
+  };
+
+  // Get list of blocked countries (admin only)
+  public query ({ caller }) func getBlockedCountries() : async [Text] {
+    enforceAdmin(caller);
+    blockedCountries.toArray();
+  };
+
+  // Update list of blocked countries (admin only)
+  public shared ({ caller }) func updateBlockedCountries(newCountries : [Text]) : async () {
+    enforceAdmin(caller);
+    blockedCountries.clear();
+    blockedCountries.addAll(newCountries.map(func(c) { c.toUpper() }).values());
+  };
+
+  // Get affiliate config status (admin)
+  public query ({ caller }) func getAffiliateConfigStatus() : async AffiliateConfigStatus {
+    enforceAdmin(caller);
+    {
+      clickbankConfigured = siteSettings.clickbankApiKey != "" and siteSettings.clickbankClerkId != "";
+      amazonConfigured = siteSettings.amazonAccessKey != "" and siteSettings.amazonSecretKey != "" and siteSettings.amazonAssociateTag != "";
+    };
+  };
 };
+
