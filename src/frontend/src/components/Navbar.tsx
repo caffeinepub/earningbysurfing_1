@@ -124,7 +124,7 @@ function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
 
           <div className="px-3 py-1.5 border-t border-gray-100 bg-red-50">
             <span className="text-[9px] text-red-400 font-medium">
-              ⛔ Pakistan traffic restricted
+              &#9940; Pakistan traffic restricted
             </span>
           </div>
         </div>
@@ -159,7 +159,7 @@ function useAdminAuth() {
   return isAdminAuthed;
 }
 
-/** 3-D tilt + gloss-shine logo that reacts to mouse position */
+/** 3-D tilt + gloss-shine logo — centered in navbar with transparent blend */
 function Logo3D() {
   const containerRef = useRef<HTMLDivElement>(null);
   const shineRef = useRef<HTMLDivElement>(null);
@@ -169,18 +169,16 @@ function Logo3D() {
     const el = containerRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2; // -1 … +1
-    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2; // -1 … +1
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
 
-    // Tilt: max ±12 degrees
     const rotX = -y * 12;
     const rotY = x * 12;
 
     el.style.transform = `perspective(600px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.04,1.04,1.04)`;
 
-    // Gloss shine position
     if (shineRef.current) {
-      const px = ((x + 1) / 2) * 100; // 0-100%
+      const px = ((x + 1) / 2) * 100;
       const py = ((y + 1) / 2) * 100;
       shineRef.current.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.55) 0%, rgba(255,220,100,0.18) 35%, transparent 65%)`;
       shineRef.current.style.opacity = "1";
@@ -203,12 +201,14 @@ function Logo3D() {
     <div
       style={{
         flexShrink: 0,
-        width: "420px",
-        maxWidth: "420px",
+        width: "200px",
+        height: "100px",
         padding: 0,
-        /* 3-D stage */
         perspective: "600px",
         perspectiveOrigin: "center center",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       {/* The tiltable card */}
@@ -220,6 +220,7 @@ function Logo3D() {
         style={{
           position: "relative",
           width: "100%",
+          height: "100%",
           cursor: "pointer",
           transition: hovered
             ? "none"
@@ -227,22 +228,22 @@ function Logo3D() {
           transformStyle: "preserve-3d",
           willChange: "transform",
           borderRadius: "10px",
-          /* Drop-shadow to simulate depth */
           filter:
-            "drop-shadow(0 8px 18px rgba(255,153,51,0.45)) drop-shadow(0 2px 4px rgba(0,0,0,0.25))",
+            "drop-shadow(0 6px 14px rgba(255,153,51,0.4)) drop-shadow(0 2px 4px rgba(0,0,0,0.15))",
         }}
       >
-        {/* The actual logo image */}
+        {/* Logo image — mix-blend-mode:multiply makes cream/white background transparent on white navbar */}
         <img
-          src="/assets/generated/ebs-logo-3d-v2.dim_1400x600.png"
+          src="/assets/uploads/ebs_logo-019d1d9c-c55a-7198-bb68-22a6ae85a1fc-1.png"
           alt="EarningBySurfing — One World One Future"
           style={{
             width: "100%",
-            height: "76px",
+            height: "100%",
             objectFit: "contain",
             display: "block",
             imageRendering: "auto",
             borderRadius: "10px",
+            mixBlendMode: "multiply",
           }}
         />
 
@@ -260,7 +261,7 @@ function Logo3D() {
           }}
         />
 
-        {/* Static bottom bevel shadow line */}
+        {/* Bottom bevel shadow */}
         <div
           style={{
             position: "absolute",
@@ -270,7 +271,7 @@ function Logo3D() {
             height: "6px",
             borderRadius: "0 0 10px 10px",
             background:
-              "linear-gradient(to right, transparent, rgba(255,153,51,0.6), rgba(255,215,0,0.5), transparent)",
+              "linear-gradient(to right, transparent, rgba(255,153,51,0.5), rgba(255,215,0,0.4), transparent)",
             filter: "blur(3px)",
             transform: "translateZ(-2px)",
             pointerEvents: "none",
@@ -305,20 +306,15 @@ export default function Navbar() {
         style={{ letterSpacing: "0.15em" }}
       >
         <span className="text-[11px] font-bold uppercase tracking-[0.18em]">
-          ❆ One World One Future ❆
+          &#10054; One World One Future &#10054;
         </span>
       </div>
 
-      {/* Main nav row */}
+      {/* Main nav row — left nav | center logo | right icons */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24 gap-4">
-          {/* Brand Logo — 3D tilt + shine on hover */}
-          <Link to="/" style={{ textDecoration: "none" }} data-ocid="nav.link">
-            <Logo3D />
-          </Link>
-
-          {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-6">
+        <div className="relative flex items-center justify-between h-24">
+          {/* Left: Desktop Nav Links */}
+          <nav className="hidden md:flex items-center gap-5 flex-shrink-0">
             {navLinks.map((link) => (
               <Link
                 key={link.labelKey}
@@ -331,7 +327,7 @@ export default function Navbar() {
             ))}
             <Link
               to="/vendor"
-              className="text-xs font-bold uppercase tracking-widest bg-saffron text-white px-4 py-1.5 rounded-full hover:bg-saffron-dark transition-colors"
+              className="text-xs font-bold uppercase tracking-widest bg-[#FF9933] text-white px-4 py-1.5 rounded-full hover:bg-orange-600 transition-colors"
               data-ocid="nav.link"
             >
               Become a Vendor
@@ -356,14 +352,39 @@ export default function Navbar() {
             )}
           </nav>
 
-          {/* Right side: language + search + icons + login */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Center: Brand Logo — absolutely centered */}
+          <div
+            className="hidden md:block absolute left-1/2"
+            style={{ transform: "translateX(-50%)" }}
+          >
+            <Link
+              to="/"
+              style={{ textDecoration: "none" }}
+              data-ocid="nav.link"
+            >
+              <Logo3D />
+            </Link>
+          </div>
+
+          {/* Mobile: Logo on the left */}
+          <div className="md:hidden">
+            <Link
+              to="/"
+              style={{ textDecoration: "none" }}
+              data-ocid="nav.link"
+            >
+              <Logo3D />
+            </Link>
+          </div>
+
+          {/* Right: language + search + icons + login */}
+          <div className="hidden md:flex items-center gap-3 flex-shrink-0">
             <LanguageDropdown />
             <div className="flex items-center border border-border rounded-full overflow-hidden">
               <input
                 type="text"
                 placeholder="Search products..."
-                className="px-3 py-1.5 text-xs outline-none bg-transparent w-36"
+                className="px-3 py-1.5 text-xs outline-none bg-transparent w-32"
                 data-ocid="search.input"
               />
               <button
@@ -443,7 +464,7 @@ export default function Navbar() {
           ))}
           <Link
             to="/vendor"
-            className="text-sm font-bold uppercase tracking-widest bg-saffron text-white px-4 py-2 rounded-full text-center"
+            className="text-sm font-bold uppercase tracking-widest bg-[#FF9933] text-white px-4 py-2 rounded-full text-center"
             onClick={() => setMenuOpen(false)}
             data-ocid="nav.link"
           >

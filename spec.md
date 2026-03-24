@@ -1,40 +1,23 @@
-# EarningBySurfing
+# EarningBySurfing — Version 35
 
 ## Current State
-- Backend has full product, member, order, vendor, CMS, and admin functionality
-- AI Product Hunter shows static seed products; no real affiliate API integration
-- AI Buyer Finder uses hardcoded headline templates with no dynamic logic
-- Pakistan block is frontend-only (UI restriction, no backend IP enforcement)
-- http-outcalls component not yet selected
+- Navbar has a left-aligned `Logo3D` component using `/assets/generated/ebs-logo-3d-v2.dim_1400x600.png` with CSS 3D tilt/shine effects
+- HeroAnimation.tsx contains the Earth globe + 6 pink currency particle orbits, loaded lazily in HomePage
+- All core features (Pakistan block, 4000-member login, ClickBank, Saffron theme) are active
 
 ## Requested Changes (Diff)
 
 ### Add
-- **ClickBank API integration** (Priority 1): Backend HTTP outcall to ClickBank Marketplace REST API (`https://api.clickbank.com/rest/1.3/products/list`) using stored API credentials. Returns real products with title, description, commission rate, affiliate hoplink.
-- **Amazon Associates config placeholders**: Backend stores `amazonAccessKey`, `amazonSecretKey`, `amazonAssociateTag` as admin-settable config fields. No live calls yet -- ready to activate when keys are provided.
-- **Smart Rule-Based Dynamic Headline Engine**: Frontend utility that takes a product's `title`, `description`, and `category` and outputs a unique headline using one of 8-10 proven copywriting formulas (curiosity, urgency, benefit-driven, social proof, fear of missing out, how-to, number-based, question, testimonial-style, transformation). Formula is selected deterministically based on product title hash so same product always gets the same formula, but different products get different formulas.
-- **Backend Pakistan Block**: New `checkAccess` public query that receives a country code string and returns `false` for `"PK"`. Frontend calls this on app load and shows a hard block screen. Additionally, backend stores a blocklist of country codes that admin can manage.
+- Nothing new to add
 
 ### Modify
-- **Backend `SiteSettings`**: Add `clickbankApiKey`, `clickbankClerkId`, `amazonAccessKey`, `amazonSecretKey`, `amazonAssociateTag` fields
-- **`updateSiteSettings`**: Admin can set affiliate API credentials via existing settings update flow
-- **AI Product Hunter page**: Add "Fetch Live ClickBank Products" button that calls backend HTTP outcall. Results display in the existing product grid. Show "API key not configured" state if keys are missing.
-- **AI Buyer Finder**: Replace static template headlines with calls to the new Dynamic Headline Engine, passing real product data
+1. **Navbar Logo**: Replace the left-aligned `Logo3D` component with the uploaded emblem image (`/assets/uploads/ebs_logo-019d1d9c-c55a-7198-bb68-22a6ae85a1fc-1.png`). Center it in the navbar as the dominant element. Apply `mix-blend-mode: multiply` so the cream-white card background blends transparently into the white navbar. Retain the 3D tilt/shine hover effect on the new image. Container should be centered, not left-aligned.
+2. **Hero Globe + Currency Particles**: Verify and ensure `HeroAnimation.tsx` (Earth globe rotating clockwise + 6 pink currency particles ₹, د.إ, $, €, £, ¥ orbiting clockwise) is properly imported and rendered in `HomePage.tsx`. Restore if missing or broken.
 
 ### Remove
-- Nothing removed -- all existing features preserved
+- Remove the old Logo3D component's hardcoded image path (`/assets/generated/ebs-logo-3d-v2.dim_1400x600.png`)
 
 ## Implementation Plan
-1. Select `http-outcalls` component
-2. Generate Motoko backend with:
-   - Extended `SiteSettings` to include ClickBank + Amazon credential fields
-   - `fetchClickBankProducts(query, category)` -- HTTP outcall to ClickBank API using stored credentials
-   - `getAffiliateConfig()` -- admin-only query returns which APIs are configured (boolean flags, no raw keys)
-   - `checkCountryAccess(countryCode)` -- returns false for "PK", true otherwise; admin can manage blocklist
-   - `updateBlockedCountries(countries)` -- admin sets blocked country list
-3. Frontend:
-   - Dynamic Headline Engine utility (headlineEngine.ts) with 10 copywriting formulas
-   - AI Product Hunter: "Fetch Live Products" button wired to backend ClickBank call
-   - AI Buyer Finder: Replace static headlines with headlineEngine output
-   - App.tsx: On load, call `checkCountryAccess` with detected country; show hard block screen for PK
-   - Admin Settings tab: Add affiliate API credential input fields (masked)
+1. In `Navbar.tsx`: Update `Logo3D` to use the new uploaded image path `/assets/uploads/ebs_logo-019d1d9c-c55a-7198-bb68-22a6ae85a1fc-1.png`. Change navbar layout to center the logo (use `justify-center` or absolute centering). Apply `mix-blend-mode: multiply` on the image to make cream background transparent. Keep 3D tilt/shine CSS hover effects.
+2. In `HomePage.tsx`: Confirm `HeroAnimation` lazy import and `<HeroErrorBoundary><Suspense><HeroAnimation /></Suspense></HeroErrorBoundary>` are intact and correctly positioned in the hero section. If the globe or currencies are missing from the rendered DOM, restore the full implementation.
+3. Validate build.

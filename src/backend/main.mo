@@ -2,7 +2,7 @@ import Float "mo:core/Float";
 import Iter "mo:core/Iter";
 import List "mo:core/List";
 import Map "mo:core/Map";
-import Migration "migration";
+
 import Nat "mo:core/Nat";
 import Order "mo:core/Order";
 import Principal "mo:core/Principal";
@@ -16,7 +16,7 @@ import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
 // Data migration at upgrade
-(with migration = Migration.run)
+
 actor {
   type Category = {
     #tech;
