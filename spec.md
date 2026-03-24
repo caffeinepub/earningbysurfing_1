@@ -1,23 +1,28 @@
-# EarningBySurfing — Version 35
+# EarningBySurfing
 
 ## Current State
-- Navbar has a left-aligned `Logo3D` component using `/assets/generated/ebs-logo-3d-v2.dim_1400x600.png` with CSS 3D tilt/shine effects
-- HeroAnimation.tsx contains the Earth globe + 6 pink currency particle orbits, loaded lazily in HomePage
-- All core features (Pakistan block, 4000-member login, ClickBank, Saffron theme) are active
+- Navbar has a 200px 3D logo on the LEFT side
+- Hero section has a full Three.js Canvas (HeroAnimation.tsx) with a large Earth globe + floating currency particles
+- Currency particles sometimes disappear due to race conditions with texture loading / React lazy
+- Navbar nav links (including Admin Panel) are present but can get crowded
+- App had crash issues with blank white page (fixed in v37)
 
 ## Requested Changes (Diff)
 
 ### Add
-- Nothing new to add
+- `NavGlobe.tsx` — a pure HTML5 Canvas 2D component: small blue rotating Earth globe (matching logo height ~80px) with 6 white currency text particles (₹, د.إ, $, €, £, ¥) orbiting it clockwise. This goes in the navbar immediately next to the logo. NO Three.js — use requestAnimationFrame + Canvas 2D only for zero-flicker reliability.
 
 ### Modify
-1. **Navbar Logo**: Replace the left-aligned `Logo3D` component with the uploaded emblem image (`/assets/uploads/ebs_logo-019d1d9c-c55a-7198-bb68-22a6ae85a1fc-1.png`). Center it in the navbar as the dominant element. Apply `mix-blend-mode: multiply` so the cream-white card background blends transparently into the white navbar. Retain the 3D tilt/shine hover effect on the new image. Container should be centered, not left-aligned.
-2. **Hero Globe + Currency Particles**: Verify and ensure `HeroAnimation.tsx` (Earth globe rotating clockwise + 6 pink currency particles ₹, د.إ, $, €, £, ¥ orbiting clockwise) is properly imported and rendered in `HomePage.tsx`. Restore if missing or broken.
+- `Navbar.tsx`: Logo stays locked to far LEFT. NavGlobe sits immediately to the right of the logo. All nav links (including Admin Panel) have their own clear space, no overlap. Navbar height should accommodate both elements cleanly.
+- `HeroAnimation.tsx` and its usage in `HomePage.tsx`: Remove or replace with a lightweight hero visual (just the solid saffron background + text). The large Three.js globe is replaced by the small NavGlobe in the navbar. This eliminates the main source of crashes and flickering.
+- `HomePage.tsx`: Hero section keeps solid saffron (#FF9933) background and text. Remove the `<HeroAnimation>` canvas and `HeroErrorBoundary` wrapper — no more Three.js in the hero.
 
 ### Remove
-- Remove the old Logo3D component's hardcoded image path (`/assets/generated/ebs-logo-3d-v2.dim_1400x600.png`)
+- The large Three.js Canvas from the hero section (it is the root cause of flicker/crash issues)
+- Any lazy imports of HeroAnimation from HomePage
 
 ## Implementation Plan
-1. In `Navbar.tsx`: Update `Logo3D` to use the new uploaded image path `/assets/uploads/ebs_logo-019d1d9c-c55a-7198-bb68-22a6ae85a1fc-1.png`. Change navbar layout to center the logo (use `justify-center` or absolute centering). Apply `mix-blend-mode: multiply` on the image to make cream background transparent. Keep 3D tilt/shine CSS hover effects.
-2. In `HomePage.tsx`: Confirm `HeroAnimation` lazy import and `<HeroErrorBoundary><Suspense><HeroAnimation /></Suspense></HeroErrorBoundary>` are intact and correctly positioned in the hero section. If the globe or currencies are missing from the rendered DOM, restore the full implementation.
-3. Validate build.
+1. Create `src/frontend/src/components/NavGlobe.tsx` — Canvas 2D component, ~80x80px, draws a blue globe with lat/long grid lines, rotates clockwise at ~10deg/sec, 6 currency symbols orbit on 2 tilted elliptical paths clockwise. Use useRef for all animation state. Proper cleanup on unmount. NO React state updates in the animation loop.
+2. Update `Navbar.tsx` — import NavGlobe, place it immediately after `<Logo3D />` in both desktop and mobile left sections. Ensure flex layout doesn't cause overlap with nav links. Logo stays at far left.
+3. Update `HomePage.tsx` — remove HeroAnimation lazy import, HeroErrorBoundary, and the Canvas in the hero. Hero section keeps its saffron background and hero text.
+4. Validate build.

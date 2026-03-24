@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ACTIVE_LANGUAGES, useLanguage } from "../contexts/LanguageContext";
 import { useMemberAuth } from "../hooks/useMemberAuth";
 import MemberLoginModal from "./MemberLoginModal";
+import NavGlobe from "./NavGlobe";
 
 function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
   const { language, setLanguage, currentOption } = useLanguage();
@@ -202,16 +203,15 @@ function Logo3D() {
       style={{
         flexShrink: 0,
         width: "200px",
-        height: "100px",
+        height: "80px",
         padding: 0,
         perspective: "600px",
         perspectiveOrigin: "center center",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "flex-start",
       }}
     >
-      {/* The tiltable card */}
       <div
         ref={containerRef}
         onMouseMove={handleMouseMove}
@@ -232,7 +232,6 @@ function Logo3D() {
             "drop-shadow(0 6px 14px rgba(255,153,51,0.4)) drop-shadow(0 2px 4px rgba(0,0,0,0.15))",
         }}
       >
-        {/* Logo image — mix-blend-mode:multiply makes cream/white background transparent on white navbar */}
         <img
           src="/assets/uploads/ebs_logo-019d1d9c-c55a-7198-bb68-22a6ae85a1fc-1.png"
           alt="EarningBySurfing — One World One Future"
@@ -247,7 +246,6 @@ function Logo3D() {
           }}
         />
 
-        {/* Gloss / shine overlay */}
         <div
           ref={shineRef}
           style={{
@@ -261,7 +259,6 @@ function Logo3D() {
           }}
         />
 
-        {/* Bottom bevel shadow */}
         <div
           style={{
             position: "absolute",
@@ -313,8 +310,8 @@ export default function Navbar() {
       {/* Main nav row */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-24">
-          {/* Left: Logo + Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-4">
+          {/* Left: Logo + Globe + Desktop Nav Links */}
+          <div className="hidden md:flex items-center gap-3 flex-shrink-0">
             <Link
               to="/"
               style={{ textDecoration: "none" }}
@@ -322,12 +319,13 @@ export default function Navbar() {
             >
               <Logo3D />
             </Link>
-            <nav className="flex items-center gap-5 flex-shrink-0">
+            <NavGlobe size={80} />
+            <nav className="flex items-center gap-4 flex-shrink-0 ml-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.labelKey}
                   to={link.to}
-                  className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors"
+                  className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors whitespace-nowrap"
                   data-ocid="nav.link"
                 >
                   {t(link.labelKey)}
@@ -335,15 +333,15 @@ export default function Navbar() {
               ))}
               <Link
                 to="/vendor"
-                className="text-xs font-bold uppercase tracking-widest bg-[#FF9933] text-white px-4 py-1.5 rounded-full hover:bg-orange-600 transition-colors"
+                className="text-xs font-bold uppercase tracking-widest bg-[#FF9933] text-white px-3 py-1.5 rounded-full hover:bg-orange-600 transition-colors whitespace-nowrap"
                 data-ocid="nav.link"
               >
-                Become a Vendor
+                Vendor
               </Link>
               {member && (
                 <Link
                   to="/dashboard"
-                  className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors"
+                  className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors whitespace-nowrap"
                   data-ocid="nav.link"
                 >
                   {t("DASHBOARD")}
@@ -352,7 +350,7 @@ export default function Navbar() {
               {isAdminAuthed && (
                 <Link
                   to="/admin"
-                  className="text-xs font-semibold uppercase tracking-widest text-[#FF9933] hover:text-orange-600 transition-colors"
+                  className="text-xs font-bold uppercase tracking-widest text-[#FF9933] hover:text-orange-600 transition-colors whitespace-nowrap border border-[#FF9933] px-2 py-1 rounded"
                   data-ocid="nav.link"
                 >
                   {t("ADMIN")}
@@ -361,8 +359,8 @@ export default function Navbar() {
             </nav>
           </div>
 
-          {/* Mobile: Logo on the left */}
-          <div className="md:hidden">
+          {/* Mobile: Logo + small globe on the left */}
+          <div className="md:hidden flex items-center gap-2">
             <Link
               to="/"
               style={{ textDecoration: "none" }}
@@ -370,6 +368,7 @@ export default function Navbar() {
             >
               <Logo3D />
             </Link>
+            <NavGlobe size={50} />
           </div>
 
           {/* Right: language + search + icons + login */}
@@ -378,8 +377,8 @@ export default function Navbar() {
             <div className="flex items-center border border-border rounded-full overflow-hidden">
               <input
                 type="text"
-                placeholder="Search products..."
-                className="px-3 py-1.5 text-xs outline-none bg-transparent w-32"
+                placeholder="Search..."
+                className="px-3 py-1.5 text-xs outline-none bg-transparent w-24"
                 data-ocid="search.input"
               />
               <button
@@ -478,7 +477,7 @@ export default function Navbar() {
           {isAdminAuthed && (
             <Link
               to="/admin"
-              className="text-sm font-semibold uppercase tracking-widest text-[#FF9933] py-2"
+              className="text-sm font-semibold uppercase tracking-widest text-[#FF9933] py-2 border border-[#FF9933] px-3 rounded text-center"
               onClick={() => setMenuOpen(false)}
               data-ocid="nav.link"
             >

@@ -12,18 +12,14 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { Suspense, lazy } from "react";
 import { toast } from "sonner";
 import { Category } from "../backend";
-import { HeroErrorBoundary } from "../components/HeroErrorBoundary";
 import { CURATED_PRODUCTS } from "../data/curatedProducts";
 import {
   useAllProducts,
   useAutoPostCategories,
   useSubmitOrder,
 } from "../hooks/useQueries";
-
-const HeroAnimation = lazy(() => import("../components/HeroAnimation"));
 
 const CATEGORY_LABELS: Record<Category, string> = {
   [Category.shoesAndClothes]: "Fashion",
@@ -315,14 +311,7 @@ export default function HomePage() {
           style={{ backgroundColor: "#FF9933", zIndex: 0 }}
         />
 
-        {/* 3D Globe animation — centered canvas */}
-        <HeroErrorBoundary>
-          <Suspense fallback={null}>
-            <HeroAnimation />
-          </Suspense>
-        </HeroErrorBoundary>
-
-        {/* Hero text — left column, above canvas */}
+        {/* Hero text — left column */}
         <div
           className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full"
           style={{ zIndex: 10 }}
