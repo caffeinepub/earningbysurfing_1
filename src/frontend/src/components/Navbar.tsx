@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { ACTIVE_LANGUAGES, useLanguage } from "../contexts/LanguageContext";
 import { useMemberAuth } from "../hooks/useMemberAuth";
 import MemberLoginModal from "./MemberLoginModal";
-import NavGlobe from "./NavGlobe";
 
 function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
   const { language, setLanguage, currentOption } = useLanguage();
@@ -309,9 +308,9 @@ export default function Navbar() {
 
       {/* Main nav row */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24">
-          {/* Left: Logo + Globe + Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center h-24 gap-2">
+          {/* FAR LEFT: Logo only */}
+          <div className="hidden md:flex items-center flex-shrink-0">
             <Link
               to="/"
               style={{ textDecoration: "none" }}
@@ -319,66 +318,58 @@ export default function Navbar() {
             >
               <Logo3D />
             </Link>
-            <NavGlobe size={80} />
-            <nav className="flex items-center gap-4 flex-shrink-0 ml-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.labelKey}
-                  to={link.to}
-                  className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors whitespace-nowrap"
-                  data-ocid="nav.link"
-                >
-                  {t(link.labelKey)}
-                </Link>
-              ))}
+          </div>
+
+          {/* CENTER-LEFT: Navigation Links */}
+          <nav className="hidden md:flex items-center gap-3 flex-shrink-0 ml-3">
+            {navLinks.map((link) => (
               <Link
-                to="/vendor"
-                className="text-xs font-bold uppercase tracking-widest bg-[#FF9933] text-white px-3 py-1.5 rounded-full hover:bg-orange-600 transition-colors whitespace-nowrap"
+                key={link.labelKey}
+                to={link.to}
+                className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors whitespace-nowrap"
                 data-ocid="nav.link"
               >
-                Vendor
+                {t(link.labelKey)}
               </Link>
-              {member && (
-                <Link
-                  to="/dashboard"
-                  className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors whitespace-nowrap"
-                  data-ocid="nav.link"
-                >
-                  {t("DASHBOARD")}
-                </Link>
-              )}
-              {isAdminAuthed && (
-                <Link
-                  to="/admin"
-                  className="text-xs font-bold uppercase tracking-widest text-[#FF9933] hover:text-orange-600 transition-colors whitespace-nowrap border border-[#FF9933] px-2 py-1 rounded"
-                  data-ocid="nav.link"
-                >
-                  {t("ADMIN")}
-                </Link>
-              )}
-            </nav>
-          </div>
-
-          {/* Mobile: Logo + small globe on the left */}
-          <div className="md:hidden flex items-center gap-2">
+            ))}
             <Link
-              to="/"
-              style={{ textDecoration: "none" }}
+              to="/vendor"
+              className="text-xs font-bold uppercase tracking-widest bg-[#FF9933] text-white px-3 py-1.5 rounded-full hover:bg-orange-600 transition-colors whitespace-nowrap"
               data-ocid="nav.link"
             >
-              <Logo3D />
+              VENDOR
             </Link>
-            <NavGlobe size={50} />
-          </div>
+            {member && (
+              <Link
+                to="/dashboard"
+                className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors whitespace-nowrap"
+                data-ocid="nav.link"
+              >
+                {t("DASHBOARD")}
+              </Link>
+            )}
+            {isAdminAuthed && (
+              <Link
+                to="/admin"
+                className="text-xs font-bold uppercase tracking-widest text-[#FF9933] hover:text-orange-600 transition-colors whitespace-nowrap border border-[#FF9933] px-2 py-1 rounded"
+                data-ocid="nav.link"
+              >
+                ADMIN
+              </Link>
+            )}
+          </nav>
 
-          {/* Right: language + search + icons + login */}
-          <div className="hidden md:flex items-center gap-3 flex-shrink-0">
+          {/* SPACER */}
+          <div className="flex-1" />
+
+          {/* FAR RIGHT: Language + Search + Icons + Login */}
+          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
             <LanguageDropdown />
             <div className="flex items-center border border-border rounded-full overflow-hidden">
               <input
                 type="text"
                 placeholder="Search..."
-                className="px-3 py-1.5 text-xs outline-none bg-transparent w-24"
+                className="px-3 py-1.5 text-xs outline-none bg-transparent w-20"
                 data-ocid="search.input"
               />
               <button
@@ -425,20 +416,31 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile hamburger */}
-          <button
-            type="button"
-            className="md:hidden p-2 text-foreground"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
-            data-ocid="nav.toggle"
-          >
-            {menuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
-          </button>
+          {/* Mobile: Logo left, hamburger right */}
+          <div className="md:hidden flex items-center justify-between w-full">
+            <Link
+              to="/"
+              style={{ textDecoration: "none" }}
+              data-ocid="nav.link"
+            >
+              <Logo3D />
+            </Link>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="p-2 text-foreground"
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-label="Toggle menu"
+                data-ocid="nav.toggle"
+              >
+                {menuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -462,7 +464,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
             data-ocid="nav.link"
           >
-            Become a Vendor
+            VENDOR
           </Link>
           {member && (
             <Link
@@ -481,7 +483,7 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
               data-ocid="nav.link"
             >
-              {t("ADMIN")}
+              ADMIN
             </Link>
           )}
           <div className="pt-2 border-t border-border">

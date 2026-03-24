@@ -14,6 +14,7 @@ import {
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Category } from "../backend";
+import EBSGlobeRight from "../components/EBSGlobeRight";
 import { CURATED_PRODUCTS } from "../data/curatedProducts";
 import {
   useAllProducts,
@@ -305,22 +306,23 @@ export default function HomePage() {
         className="relative min-h-[85vh] flex items-center overflow-hidden"
         data-ocid="hero.section"
       >
-        {/* Solid Khalish Saffron background */}
+        {/* Solid Khalish Saffron background — instant, no gradient */}
         <div
           className="absolute inset-0"
           style={{ backgroundColor: "#FF9933", zIndex: 0 }}
         />
 
-        {/* Hero text — left column */}
+        {/* Two-column hero layout */}
         <div
-          className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full"
+          className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full flex flex-col lg:flex-row items-center gap-12"
           style={{ zIndex: 10 }}
         >
+          {/* Left: text */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="max-w-xl"
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="flex-1 max-w-xl"
           >
             <p
               className="text-white/90 text-xs font-bold uppercase tracking-[0.3em] mb-4"
@@ -377,6 +379,11 @@ export default function HomePage() {
               </Button>
             </div>
           </motion.div>
+
+          {/* Right: Globe — NO animation delay, renders instantly */}
+          <div className="flex-shrink-0 flex items-center justify-center">
+            <EBSGlobeRight size={250} />
+          </div>
         </div>
 
         {/* White wave clip at bottom */}

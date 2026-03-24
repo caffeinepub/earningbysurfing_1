@@ -39,6 +39,7 @@ import {
   Loader2,
   Package,
   Plus,
+  Radio,
   Save,
   Settings,
   ShoppingBag,
@@ -53,6 +54,7 @@ import { motion } from "motion/react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Product } from "../backend";
+import AgentStatusTab from "../components/AgentStatusTab";
 import { SAMPLE_INVENTORY_PRODUCTS } from "../data/sampleInventoryProducts";
 import { useActor } from "../hooks/useActor";
 import {
@@ -86,6 +88,7 @@ const CATEGORY_OPTIONS = [
 ];
 
 type AdminSection =
+  | "agentStatus"
   | "dashboard"
   | "products"
   | "users"
@@ -2049,6 +2052,7 @@ export default function AdminPage() {
     label: string;
     icon: React.FC<{ className?: string }>;
   }[] = [
+    { id: "agentStatus", label: "Agent Status", icon: Radio },
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "products", label: "Products", icon: Package },
     { id: "users", label: "Users", icon: Users },
@@ -2119,6 +2123,13 @@ export default function AdminPage() {
       {/* Main content */}
       <div className="flex-1 overflow-auto">
         <div className="max-w-5xl mx-auto px-6 py-8">
+          {/* Agent Status */}
+          {section === "agentStatus" && (
+            <AgentStatusTab
+              onNavigateToSettings={() => setSection("settings")}
+            />
+          )}
+
           {/* Dashboard */}
           {section === "dashboard" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
