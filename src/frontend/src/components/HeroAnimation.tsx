@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { Suspense, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { TextureLoader } from "three";
 
@@ -39,18 +39,34 @@ function EarthGlobe() {
   );
 }
 
-// ─── Currency text sprite — GULABI PINK palette ───
+// Fallback wireframe globe shown while texture loads
+function WireframeGlobe() {
+  const groupRef = useRef<THREE.Group>(null);
+  useFrame((_, delta) => {
+    if (groupRef.current) groupRef.current.rotation.y += delta * 0.2;
+  });
+  return (
+    <group ref={groupRef}>
+      <mesh>
+        <sphereGeometry args={[GLOBE_RADIUS, 32, 32]} />
+        <meshBasicMaterial color="#1a6fbf" wireframe />
+      </mesh>
+    </group>
+  );
+}
+
+// ─── Currency text sprite — Clean White/Silver palette ───
 function makeCurrencySprite(symbol: string): THREE.Texture {
   const canvas = document.createElement("canvas");
   canvas.width = 128;
   canvas.height = 128;
   const ctx = canvas.getContext("2d")!;
 
-  // Vibrant Gulabi pink radial gradient background
+  // White/silver clean circle
   const grad = ctx.createRadialGradient(64, 64, 10, 64, 64, 55);
-  grad.addColorStop(0, "rgba(255, 20, 147, 0.95)"); // deep pink centre
-  grad.addColorStop(0.55, "rgba(255, 105, 180, 0.80)"); // hot pink mid
-  grad.addColorStop(1, "rgba(255, 182, 193, 0)"); // light pink fade
+  grad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+  grad.addColorStop(0.55, "rgba(220, 220, 220, 0.80)");
+  grad.addColorStop(1, "rgba(200, 200, 200, 0)");
   ctx.beginPath();
   ctx.arc(64, 64, 55, 0, Math.PI * 2);
   ctx.fillStyle = grad;
@@ -58,9 +74,9 @@ function makeCurrencySprite(symbol: string): THREE.Texture {
 
   const isLong = [...symbol].length > 1;
   ctx.font = `bold ${isLong ? 34 : 52}px Arial, sans-serif`;
-  ctx.fillStyle = "#ffffff";
-  ctx.shadowColor = "#FF1493";
-  ctx.shadowBlur = 16;
+  ctx.fillStyle = "#1a1a1a"; // dark text for contrast on white
+  ctx.shadowColor = "rgba(0,0,0,0.3)";
+  ctx.shadowBlur = 8;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(symbol, 64, 66);
@@ -168,6 +184,16 @@ function FloatingCurrency({
   );
 }
 
+function CurrencyParticles() {
+  return (
+    <>
+      {CURRENCIES.map((cfg) => (
+        <FloatingCurrency key={cfg.id} {...cfg} />
+      ))}
+    </>
+  );
+}
+
 function Scene() {
   return (
     <>
@@ -175,14 +201,15 @@ function Scene() {
       <directionalLight position={[8, 6, 8]} color="#ffffff" intensity={2.5} />
       <pointLight
         position={[-6, 4, 5]}
-        color="#FF69B4"
-        intensity={10}
+        color="#ffffff"
+        intensity={6}
         distance={30}
       />
-      <EarthGlobe />
-      {CURRENCIES.map((cfg) => (
-        <FloatingCurrency key={cfg.id} {...cfg} />
-      ))}
+      {/* Suspense wraps EarthGlobe which suspends via useLoader */}
+      <Suspense fallback={<WireframeGlobe />}>
+        <EarthGlobe />
+      </Suspense>
+      <CurrencyParticles />
     </>
   );
 }

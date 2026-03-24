@@ -159,7 +159,7 @@ function useAdminAuth() {
   return isAdminAuthed;
 }
 
-/** 3-D tilt + gloss-shine logo — centered in navbar with transparent blend */
+/** 3-D tilt + gloss-shine logo */
 function Logo3D() {
   const containerRef = useRef<HTMLDivElement>(null);
   const shineRef = useRef<HTMLDivElement>(null);
@@ -310,53 +310,11 @@ export default function Navbar() {
         </span>
       </div>
 
-      {/* Main nav row — left nav | center logo | right icons */}
+      {/* Main nav row */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative flex items-center justify-between h-24">
-          {/* Left: Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-5 flex-shrink-0">
-            {navLinks.map((link) => (
-              <Link
-                key={link.labelKey}
-                to={link.to}
-                className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors"
-                data-ocid="nav.link"
-              >
-                {t(link.labelKey)}
-              </Link>
-            ))}
-            <Link
-              to="/vendor"
-              className="text-xs font-bold uppercase tracking-widest bg-[#FF9933] text-white px-4 py-1.5 rounded-full hover:bg-orange-600 transition-colors"
-              data-ocid="nav.link"
-            >
-              Become a Vendor
-            </Link>
-            {member && (
-              <Link
-                to="/dashboard"
-                className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors"
-                data-ocid="nav.link"
-              >
-                {t("DASHBOARD")}
-              </Link>
-            )}
-            {isAdminAuthed && (
-              <Link
-                to="/admin"
-                className="text-xs font-semibold uppercase tracking-widest text-[#FF9933] hover:text-orange-600 transition-colors"
-                data-ocid="nav.link"
-              >
-                {t("ADMIN")}
-              </Link>
-            )}
-          </nav>
-
-          {/* Center: Brand Logo — absolutely centered */}
-          <div
-            className="hidden md:block absolute left-1/2"
-            style={{ transform: "translateX(-50%)" }}
-          >
+        <div className="flex items-center justify-between h-24">
+          {/* Left: Logo + Desktop Nav Links */}
+          <div className="hidden md:flex items-center gap-4">
             <Link
               to="/"
               style={{ textDecoration: "none" }}
@@ -364,6 +322,43 @@ export default function Navbar() {
             >
               <Logo3D />
             </Link>
+            <nav className="flex items-center gap-5 flex-shrink-0">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.labelKey}
+                  to={link.to}
+                  className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors"
+                  data-ocid="nav.link"
+                >
+                  {t(link.labelKey)}
+                </Link>
+              ))}
+              <Link
+                to="/vendor"
+                className="text-xs font-bold uppercase tracking-widest bg-[#FF9933] text-white px-4 py-1.5 rounded-full hover:bg-orange-600 transition-colors"
+                data-ocid="nav.link"
+              >
+                Become a Vendor
+              </Link>
+              {member && (
+                <Link
+                  to="/dashboard"
+                  className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors"
+                  data-ocid="nav.link"
+                >
+                  {t("DASHBOARD")}
+                </Link>
+              )}
+              {isAdminAuthed && (
+                <Link
+                  to="/admin"
+                  className="text-xs font-semibold uppercase tracking-widest text-[#FF9933] hover:text-orange-600 transition-colors"
+                  data-ocid="nav.link"
+                >
+                  {t("ADMIN")}
+                </Link>
+              )}
+            </nav>
           </div>
 
           {/* Mobile: Logo on the left */}

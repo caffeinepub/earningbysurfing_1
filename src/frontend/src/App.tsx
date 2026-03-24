@@ -12,7 +12,6 @@ import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { generateSeedMembers } from "./data/seedMembers";
-import { useActor } from "./hooks/useActor";
 import AboutPage from "./pages/AboutPage";
 import AdminPage from "./pages/AdminPage";
 import ContactPage from "./pages/ContactPage";
@@ -34,17 +33,15 @@ const PAKISTAN_TIMEZONES = ["Asia/Karachi"];
 const PAKISTAN_LOCALES = ["ur", "ur-PK", "pa-PK"];
 
 function isPakistanBrowser(): boolean {
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  if (PAKISTAN_TIMEZONES.includes(tz)) return true;
-  const lang = navigator.language || "";
-  if (PAKISTAN_LOCALES.some((l) => lang.startsWith(l))) return true;
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (PAKISTAN_TIMEZONES.includes(tz)) return true;
+    const lang = navigator.language || "";
+    if (PAKISTAN_LOCALES.some((l) => lang.startsWith(l))) return true;
+  } catch {
+    // ignore
+  }
   return false;
-}
-
-function getCountryCodeFromTimezone(): string | null {
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  if (PAKISTAN_TIMEZONES.includes(tz)) return "PK";
-  return null;
 }
 
 // ─── Block Screen ────────────────────────────────────────────────────────────
@@ -56,7 +53,7 @@ function AccessBlockedScreen() {
       style={{ backgroundColor: "#FF9933" }}
     >
       <div className="text-center px-8">
-        <div className="text-6xl mb-6">🚫</div>
+        <div className="text-6xl mb-6">&#128683;</div>
         <h1 className="text-4xl font-black text-white uppercase tracking-widest mb-4">
           Access Restricted
         </h1>
@@ -68,42 +65,17 @@ function AccessBlockedScreen() {
   );
 }
 
-// ─── Country Gate ─────────────────────────────────────────────────────────────
+// ─── Country Gate — synchronous init so app never shows blank page ─────────
 
 function CountryGate({ children }: { children: React.ReactNode }) {
-  const { actor, isFetching } = useActor();
-  const [blocked, setBlocked] = useState<boolean | null>(null);
+  // Initialize synchronously so we never return null / blank white page
+  const [blocked, setBlocked] = useState<boolean>(() => isPakistanBrowser());
 
   useEffect(() => {
-    // Fast browser-level check first
-    if (isPakistanBrowser()) {
-      setBlocked(true);
-      return;
-    }
+    // Re-check once on mount (in case navigator data wasn't ready immediately)
+    setBlocked(isPakistanBrowser());
+  }, []);
 
-    // If actor is ready, do backend verification
-    if (!actor || isFetching) return;
-
-    const countryCode = getCountryCodeFromTimezone();
-    if (countryCode) {
-      actor
-        .checkCountryAccess(countryCode)
-        .then((allowed) => {
-          setBlocked(!allowed);
-        })
-        .catch(() => {
-          // On error, do not block
-          setBlocked(false);
-        });
-    } else {
-      // Also check via backend with a generic lookup attempt
-      // For non-PK users, always allow
-      setBlocked(false);
-    }
-  }, [actor, isFetching]);
-
-  // While checking, show nothing (or could show a loading state)
-  if (blocked === null) return null;
   if (blocked) return <AccessBlockedScreen />;
   return <>{children}</>;
 }
