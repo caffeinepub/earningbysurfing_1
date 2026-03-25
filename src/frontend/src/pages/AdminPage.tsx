@@ -315,7 +315,7 @@ function ProductInventorySection() {
                 placeholder="e.g. Anker PowerCore 26800"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="border-[#FF9933]/40 focus-visible:ring-[#FF9933]"
+                className="border-[#F37D22]/40 focus-visible:ring-[#F37D22]"
                 data-ocid="inventory.input"
               />
             </div>
@@ -330,7 +330,7 @@ function ProductInventorySection() {
                 placeholder="e.g. 49.99"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="border-[#FF9933]/40 focus-visible:ring-[#FF9933]"
+                className="border-[#F37D22]/40 focus-visible:ring-[#F37D22]"
                 data-ocid="inventory.price.input"
               />
             </div>
@@ -340,7 +340,7 @@ function ProductInventorySection() {
               </Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger
-                  className="border-[#FF9933]/40 focus:ring-[#FF9933]"
+                  className="border-[#F37D22]/40 focus:ring-[#F37D22]"
                   data-ocid="inventory.select"
                 >
                   <SelectValue />
@@ -363,14 +363,14 @@ function ProductInventorySection() {
                 placeholder="https://amzn.to/..."
                 value={affiliateLink}
                 onChange={(e) => setAffiliateLink(e.target.value)}
-                className="border-[#FF9933]/40 focus-visible:ring-[#FF9933]"
+                className="border-[#F37D22]/40 focus-visible:ring-[#F37D22]"
                 data-ocid="inventory.link.input"
               />
             </div>
           </div>
           <div className="flex items-center gap-3 mt-4 flex-wrap">
             <Button
-              className="bg-[#FF9933] text-white hover:bg-[#e6882e] font-bold uppercase tracking-widest text-xs"
+              className="bg-[#F37D22] text-white hover:bg-[#e6882e] font-bold uppercase tracking-widest text-xs"
               onClick={handleAdd}
               disabled={addProduct.isPending}
               data-ocid="inventory.primary_button"
@@ -388,7 +388,7 @@ function ProductInventorySection() {
             {products.length === 0 && (
               <Button
                 variant="outline"
-                className="border-[#FF9933] text-[#FF9933] hover:bg-[#FF9933] hover:text-white font-bold uppercase tracking-widest text-xs"
+                className="border-[#F37D22] text-[#F37D22] hover:bg-[#F37D22] hover:text-white font-bold uppercase tracking-widest text-xs"
                 onClick={handleSeedProducts}
                 disabled={seeding || !actor}
                 data-ocid="inventory.secondary_button"
@@ -411,10 +411,10 @@ function ProductInventorySection() {
 
       {/* Products Table */}
       <Card className="shadow-card" data-ocid="inventory.table">
-        <CardHeader className="bg-[#FF9933] rounded-t-lg">
+        <CardHeader className="bg-[#F37D22] rounded-t-lg">
           <CardTitle className="text-sm uppercase tracking-widest text-white flex items-center justify-between">
             <span>All Products</span>
-            <Badge className="bg-white text-[#FF9933] font-black text-xs">
+            <Badge className="bg-white text-[#F37D22] font-black text-xs">
               {products.length} / 100
             </Badge>
           </CardTitle>
@@ -437,23 +437,23 @@ function ProductInventorySection() {
             <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
               <Table>
                 <TableHeader className="sticky top-0 bg-white z-10">
-                  <TableRow className="border-b border-[#FF9933]/20">
-                    <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest w-12">
+                  <TableRow className="border-b border-[#F37D22]/20">
+                    <TableHead className="text-[#F37D22] font-bold text-xs uppercase tracking-widest w-12">
                       #
                     </TableHead>
-                    <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest">
+                    <TableHead className="text-[#F37D22] font-bold text-xs uppercase tracking-widest">
                       Name
                     </TableHead>
-                    <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest">
+                    <TableHead className="text-[#F37D22] font-bold text-xs uppercase tracking-widest">
                       Price
                     </TableHead>
-                    <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest">
+                    <TableHead className="text-[#F37D22] font-bold text-xs uppercase tracking-widest">
                       Category
                     </TableHead>
-                    <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest">
+                    <TableHead className="text-[#F37D22] font-bold text-xs uppercase tracking-widest">
                       Affiliate Link
                     </TableHead>
-                    <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest w-16">
+                    <TableHead className="text-[#F37D22] font-bold text-xs uppercase tracking-widest w-16">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -462,7 +462,7 @@ function ProductInventorySection() {
                   {products.map(([id, product], index) => (
                     <TableRow
                       key={id.toString()}
-                      className="hover:bg-[#FF9933]/5 border-b border-[#FF9933]/10"
+                      className="hover:bg-[#F37D22]/5 border-b border-[#F37D22]/10"
                       data-ocid={`inventory.item.${index + 1}`}
                     >
                       <TableCell className="text-xs text-muted-foreground font-mono">
@@ -471,11 +471,11 @@ function ProductInventorySection() {
                       <TableCell className="font-semibold text-sm text-foreground">
                         {product.name}
                       </TableCell>
-                      <TableCell className="text-sm font-bold text-[#FF9933]">
+                      <TableCell className="text-sm font-bold text-[#F37D22]">
                         ${product.price.toFixed(2)}
                       </TableCell>
                       <TableCell>
-                        <Badge className="bg-[#FF9933]/10 text-[#FF9933] border border-[#FF9933]/30 text-xs font-semibold">
+                        <Badge className="bg-[#F37D22]/10 text-[#F37D22] border border-[#F37D22]/30 text-xs font-semibold">
                           {product.category}
                         </Badge>
                       </TableCell>
@@ -484,7 +484,7 @@ function ProductInventorySection() {
                           href={product.affiliateLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[#FF9933] hover:underline text-xs font-mono"
+                          className="text-[#F37D22] hover:underline text-xs font-mono"
                         >
                           {product.affiliateLink.length > 30
                             ? `${product.affiliateLink.slice(0, 30)}...`
@@ -556,7 +556,7 @@ function GlobalInsightsSection() {
       <div className="flex items-center gap-3 mb-5">
         <div
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm shadow"
-          style={{ backgroundColor: "#FF9933", color: "#fff" }}
+          style={{ backgroundColor: "#F37D22", color: "#fff" }}
         >
           <span className="text-lg font-black">{autoPosted.length}</span>
           <span className="uppercase tracking-widest text-xs">
@@ -584,14 +584,14 @@ function GlobalInsightsSection() {
               style={
                 isActive
                   ? {
-                      backgroundColor: "#FF9933",
-                      borderColor: "#FF9933",
+                      backgroundColor: "#F37D22",
+                      borderColor: "#F37D22",
                       color: "#fff",
                     }
                   : {
                       backgroundColor: "#fff",
-                      borderColor: "#FF9933",
-                      color: "#FF9933",
+                      borderColor: "#F37D22",
+                      color: "#F37D22",
                     }
               }
             >
@@ -619,7 +619,7 @@ function GlobalInsightsSection() {
                   <div className="flex items-center gap-2">
                     <div
                       className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 font-black text-sm"
-                      style={{ backgroundColor: "#FF9933", color: "#fff" }}
+                      style={{ backgroundColor: "#F37D22", color: "#fff" }}
                     >
                       {trend.rank}
                     </div>
@@ -630,7 +630,7 @@ function GlobalInsightsSection() {
                   {/* Hot badge */}
                   <Badge
                     className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 border-0"
-                    style={{ backgroundColor: "#FF9933", color: "#fff" }}
+                    style={{ backgroundColor: "#F37D22", color: "#fff" }}
                   >
                     <Flame className="h-3 w-3" />
                     Hot
@@ -645,9 +645,9 @@ function GlobalInsightsSection() {
                   <span
                     className="text-xs font-bold px-2 py-0.5 rounded-full"
                     style={{
-                      backgroundColor: "#FF993320",
-                      color: "#FF9933",
-                      border: "1px solid #FF993360",
+                      backgroundColor: "#F37D2220",
+                      color: "#F37D22",
+                      border: "1px solid #F37D2260",
                     }}
                   >
                     {trend.margin} Margin
@@ -686,7 +686,7 @@ function GlobalInsightsSection() {
                     <Button
                       size="sm"
                       className="text-xs font-bold uppercase tracking-wider flex-1"
-                      style={{ backgroundColor: "#FF9933", color: "#fff" }}
+                      style={{ backgroundColor: "#F37D22", color: "#fff" }}
                       onClick={() => addPost(trend.category)}
                       disabled={isMutating || apLoading}
                       data-ocid={`insights.primary_button.${trend.rank}`}
@@ -1440,7 +1440,7 @@ function VendorRequestsSection() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-[#FF9933]/20">
+                  <TableRow className="border-b border-[#F37D22]/20">
                     {[
                       "Vendor Name",
                       "Business",
@@ -1453,7 +1453,7 @@ function VendorRequestsSection() {
                     ].map((h) => (
                       <TableHead
                         key={h}
-                        className="text-[#FF9933] font-bold text-xs uppercase tracking-widest whitespace-nowrap"
+                        className="text-[#F37D22] font-bold text-xs uppercase tracking-widest whitespace-nowrap"
                       >
                         {h}
                       </TableHead>
@@ -1595,7 +1595,7 @@ function OrdersSection() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-[#FF9933]/20">
+                  <TableRow className="border-b border-[#F37D22]/20">
                     {[
                       "Order ID",
                       "Product",
@@ -1605,7 +1605,7 @@ function OrdersSection() {
                     ].map((h) => (
                       <TableHead
                         key={h}
-                        className="text-[#FF9933] font-bold text-xs uppercase tracking-widest whitespace-nowrap"
+                        className="text-[#F37D22] font-bold text-xs uppercase tracking-widest whitespace-nowrap"
                       >
                         {h}
                       </TableHead>
@@ -1645,6 +1645,111 @@ function OrdersSection() {
         </CardContent>
       </Card>
     </motion.div>
+  );
+}
+
+function ChangePasswordCard() {
+  const [currentPwInput, setCurrentPwInput] = useState("");
+  const [newPwInput, setNewPwInput] = useState("");
+  const [confirmPwInput, setConfirmPwInput] = useState("");
+  const [pwChangeMsg, setPwChangeMsg] = useState("");
+  const [pwChangeMsgType, setPwChangeMsgType] = useState<"success" | "error">(
+    "error",
+  );
+
+  const handlePasswordChange = () => {
+    const storedPw =
+      localStorage.getItem("ebs_admin_password") || "Admin@EBS2026";
+    if (currentPwInput !== storedPw) {
+      setPwChangeMsgType("error");
+      setPwChangeMsg("Current password is incorrect.");
+      return;
+    }
+    if (newPwInput.length < 8) {
+      setPwChangeMsgType("error");
+      setPwChangeMsg("New password must be at least 8 characters.");
+      return;
+    }
+    if (newPwInput !== confirmPwInput) {
+      setPwChangeMsgType("error");
+      setPwChangeMsg("New passwords do not match.");
+      return;
+    }
+    localStorage.setItem("ebs_admin_password", newPwInput);
+    setPwChangeMsgType("success");
+    setPwChangeMsg("Password changed successfully!");
+    setCurrentPwInput("");
+    setNewPwInput("");
+    setConfirmPwInput("");
+  };
+
+  return (
+    <Card
+      className="shadow-card max-w-xl mt-6"
+      data-ocid="change_password.panel"
+    >
+      <CardHeader>
+        <CardTitle className="text-sm uppercase tracking-widest text-saffron">
+          Change Admin Password
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <Label className="text-xs uppercase tracking-widest font-bold">
+            Current Password
+          </Label>
+          <Input
+            type="password"
+            value={currentPwInput}
+            onChange={(e) => setCurrentPwInput(e.target.value)}
+            placeholder="Enter current password"
+            className="mt-1"
+            data-ocid="change_password.input"
+          />
+        </div>
+        <div>
+          <Label className="text-xs uppercase tracking-widest font-bold">
+            New Password
+          </Label>
+          <Input
+            type="password"
+            value={newPwInput}
+            onChange={(e) => setNewPwInput(e.target.value)}
+            placeholder="Enter new password (min 8 chars)"
+            className="mt-1"
+            data-ocid="change_password.input"
+          />
+        </div>
+        <div>
+          <Label className="text-xs uppercase tracking-widest font-bold">
+            Confirm New Password
+          </Label>
+          <Input
+            type="password"
+            value={confirmPwInput}
+            onChange={(e) => setConfirmPwInput(e.target.value)}
+            placeholder="Confirm new password"
+            className="mt-1"
+            data-ocid="change_password.input"
+          />
+        </div>
+        {pwChangeMsg && (
+          <p
+            className={`text-xs font-semibold normal-case ${pwChangeMsgType === "success" ? "text-green-600" : "text-destructive"}`}
+          >
+            {pwChangeMsg}
+          </p>
+        )}
+        <Button
+          type="button"
+          className="bg-saffron text-white font-bold uppercase tracking-widest text-xs w-full"
+          onClick={handlePasswordChange}
+          data-ocid="change_password.submit_button"
+        >
+          Update Password
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -1746,8 +1851,8 @@ function PagesCmsSection() {
         {/* Page selector */}
         <div className="lg:w-56 flex-shrink-0">
           <div className="bg-white border border-border rounded-xl overflow-hidden shadow-sm">
-            <div className="px-4 py-3 bg-[#FF9933]/5 border-b border-border">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#FF9933]">
+            <div className="px-4 py-3 bg-[#F37D22]/5 border-b border-border">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#F37D22]">
                 Select Page
               </p>
             </div>
@@ -1758,8 +1863,8 @@ function PagesCmsSection() {
                 onClick={() => selectPage(page.slug)}
                 className={`w-full text-left px-4 py-3 text-sm font-semibold transition-colors border-b border-border last:border-0 ${
                   selectedSlug === page.slug
-                    ? "bg-[#FF9933] text-white"
-                    : "text-foreground hover:bg-[#FF9933]/5 hover:text-[#FF9933]"
+                    ? "bg-[#F37D22] text-white"
+                    : "text-foreground hover:bg-[#F37D22]/5 hover:text-[#F37D22]"
                 }`}
                 data-ocid="pages.tab"
               >
@@ -1781,7 +1886,7 @@ function PagesCmsSection() {
                   href={`/${selectedSlug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-[#FF9933] underline font-semibold uppercase tracking-wider"
+                  className="text-xs text-[#F37D22] underline font-semibold uppercase tracking-wider"
                 >
                   Preview &rarr;
                 </a>
@@ -1834,7 +1939,7 @@ function PagesCmsSection() {
                         type="button"
                         title={btn.title}
                         onClick={() => execCmd(btn.cmd)}
-                        className={`px-2.5 py-1 text-xs border border-[#FF9933]/30 rounded hover:bg-[#FF9933] hover:text-white transition-colors font-semibold ${btn.style}`}
+                        className={`px-2.5 py-1 text-xs border border-[#F37D22]/30 rounded hover:bg-[#F37D22] hover:text-white transition-colors font-semibold ${btn.style}`}
                         data-ocid="pages.button"
                       >
                         {btn.label}
@@ -1845,7 +1950,7 @@ function PagesCmsSection() {
                       type="button"
                       title="Heading 2"
                       onClick={() => execCmd("formatBlock", "H2")}
-                      className="px-2.5 py-1 text-xs border border-[#FF9933]/30 rounded hover:bg-[#FF9933] hover:text-white transition-colors font-bold"
+                      className="px-2.5 py-1 text-xs border border-[#F37D22]/30 rounded hover:bg-[#F37D22] hover:text-white transition-colors font-bold"
                       data-ocid="pages.button"
                     >
                       H2
@@ -1854,7 +1959,7 @@ function PagesCmsSection() {
                       type="button"
                       title="Heading 3"
                       onClick={() => execCmd("formatBlock", "H3")}
-                      className="px-2.5 py-1 text-xs border border-[#FF9933]/30 rounded hover:bg-[#FF9933] hover:text-white transition-colors font-bold"
+                      className="px-2.5 py-1 text-xs border border-[#F37D22]/30 rounded hover:bg-[#F37D22] hover:text-white transition-colors font-bold"
                       data-ocid="pages.button"
                     >
                       H3
@@ -1863,7 +1968,7 @@ function PagesCmsSection() {
                       type="button"
                       title="Paragraph"
                       onClick={() => execCmd("formatBlock", "P")}
-                      className="px-2.5 py-1 text-xs border border-[#FF9933]/30 rounded hover:bg-[#FF9933] hover:text-white transition-colors"
+                      className="px-2.5 py-1 text-xs border border-[#F37D22]/30 rounded hover:bg-[#F37D22] hover:text-white transition-colors"
                       data-ocid="pages.button"
                     >
                       ¶
@@ -1873,7 +1978,7 @@ function PagesCmsSection() {
                       type="button"
                       title="Unordered List"
                       onClick={() => execCmd("insertUnorderedList")}
-                      className="px-2.5 py-1 text-xs border border-[#FF9933]/30 rounded hover:bg-[#FF9933] hover:text-white transition-colors"
+                      className="px-2.5 py-1 text-xs border border-[#F37D22]/30 rounded hover:bg-[#F37D22] hover:text-white transition-colors"
                       data-ocid="pages.button"
                     >
                       • List
@@ -1882,7 +1987,7 @@ function PagesCmsSection() {
                       type="button"
                       title="Ordered List"
                       onClick={() => execCmd("insertOrderedList")}
-                      className="px-2.5 py-1 text-xs border border-[#FF9933]/30 rounded hover:bg-[#FF9933] hover:text-white transition-colors"
+                      className="px-2.5 py-1 text-xs border border-[#F37D22]/30 rounded hover:bg-[#F37D22] hover:text-white transition-colors"
                       data-ocid="pages.button"
                     >
                       1. List
@@ -1897,7 +2002,7 @@ function PagesCmsSection() {
                     onInput={() =>
                       setEditorHtml(editorRef.current?.innerHTML ?? "")
                     }
-                    className="min-h-[300px] border border-border rounded-lg p-4 text-sm leading-relaxed outline-none focus:border-[#FF9933] focus:ring-1 focus:ring-[#FF9933] prose prose-sm max-w-none prose-headings:text-[#FF9933]"
+                    className="min-h-[300px] border border-border rounded-lg p-4 text-sm leading-relaxed outline-none focus:border-[#F37D22] focus:ring-1 focus:ring-[#F37D22] prose prose-sm max-w-none prose-headings:text-[#F37D22]"
                     data-ocid="pages.editor"
                     style={{ direction: "ltr" }}
                   />
@@ -1905,7 +2010,7 @@ function PagesCmsSection() {
                   <Button
                     onClick={handleSave}
                     disabled={saving}
-                    className="mt-4 bg-[#FF9933] text-white font-bold uppercase tracking-widest text-xs w-full hover:bg-orange-600"
+                    className="mt-4 bg-[#F37D22] text-white font-bold uppercase tracking-widest text-xs w-full hover:bg-orange-600"
                     data-ocid="pages.save_button"
                   >
                     {saving ? (
@@ -1986,12 +2091,12 @@ export default function AdminPage() {
           <div className="text-center mb-8">
             <h1
               className="text-3xl font-black tracking-widest uppercase"
-              style={{ color: "#FF9933" }}
+              style={{ color: "#F37D22" }}
             >
               EarningBySurfing
             </h1>
           </div>
-          <div className="bg-white border border-[#FF9933]/30 rounded-2xl shadow-xl p-8">
+          <div className="bg-white border border-[#F37D22]/30 rounded-2xl shadow-xl p-8">
             <h2 className="text-xl font-black uppercase tracking-wide text-center mb-1">
               Admin Panel Login
             </h2>
@@ -2001,7 +2106,11 @@ export default function AdminPage() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (pwInput === "Admin@EBS2026") {
+                if (
+                  pwInput ===
+                  (localStorage.getItem("ebs_admin_password") ||
+                    "Admin@EBS2026")
+                ) {
                   localStorage.setItem("ebs_admin_auth", "true");
                   setIsAdminAuthed(true);
                   setPwError(false);
@@ -2020,7 +2129,7 @@ export default function AdminPage() {
                     setPwInput(e.target.value);
                     setPwError(false);
                   }}
-                  className="border-[#FF9933]/40 focus-visible:ring-[#FF9933]"
+                  className="border-[#F37D22]/40 focus-visible:ring-[#F37D22]"
                   data-ocid="admin.input"
                 />
                 {pwError && (
@@ -2035,7 +2144,7 @@ export default function AdminPage() {
               <Button
                 type="submit"
                 className="w-full font-black uppercase tracking-widest text-white"
-                style={{ backgroundColor: "#FF9933" }}
+                style={{ backgroundColor: "#F37D22" }}
                 data-ocid="admin.submit_button"
               >
                 Login
@@ -2432,7 +2541,7 @@ export default function AdminPage() {
                         </p>
 
                         {/* ClickBank */}
-                        <div className="mb-4 p-3 rounded-lg border border-[#FF9933]/20 bg-[#FF9933]/5">
+                        <div className="mb-4 p-3 rounded-lg border border-[#F37D22]/20 bg-[#F37D22]/5">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-bold uppercase tracking-wider text-foreground">
                               ClickBank
@@ -2488,7 +2597,7 @@ export default function AdminPage() {
                         </div>
 
                         {/* Amazon */}
-                        <div className="p-3 rounded-lg border border-[#FF9933]/20 bg-[#FF9933]/5">
+                        <div className="p-3 rounded-lg border border-[#F37D22]/20 bg-[#F37D22]/5">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-bold uppercase tracking-wider text-foreground">
                               Amazon Associates
@@ -2584,6 +2693,9 @@ export default function AdminPage() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Change Admin Password */}
+              <ChangePasswordCard />
             </motion.div>
           )}
 

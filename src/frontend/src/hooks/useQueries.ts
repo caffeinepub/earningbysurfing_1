@@ -402,3 +402,33 @@ export function useFetchClickbankProducts() {
     },
   });
 }
+
+export function useGetEarnings(memberId: string | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery<string | null>({
+    queryKey: ["earnings", memberId],
+    queryFn: async () => {
+      if (!actor || !memberId) return null;
+      // actor may not have typed saveEarnings/getEarnings (declaration quirk)
+      const result = await (actor as any).getEarnings(memberId);
+      return Array.isArray(result) && result.length > 0 ? result[0] : null;
+    },
+    enabled: !!actor && !isFetching && !!memberId,
+  });
+}
+
+export function useSaveEarnings() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async ({
+      memberId,
+      earningsJson,
+    }: {
+      memberId: string;
+      earningsJson: string;
+    }) => {
+      if (!actor) return;
+      await (actor as any).saveEarnings(memberId, earningsJson);
+    },
+  });
+}

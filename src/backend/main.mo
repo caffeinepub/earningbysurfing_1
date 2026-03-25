@@ -330,6 +330,7 @@ actor {
   let vendorRequests = Map.empty<Nat, VendorRequest>();
   let orders = Map.empty<Nat, Order>();
   let pageContents = Map.empty<Text, PageContent>();
+  let memberEarnings = Map.empty<Text, Text>();
 
   // State
   var visitorCount : Nat = 0;
@@ -771,5 +772,18 @@ actor {
       amazonConfigured = siteSettings.amazonAccessKey != "" and siteSettings.amazonSecretKey != "" and siteSettings.amazonAssociateTag != "";
     };
   };
-};
 
+  // Earnings Persistence (keyed by member ID as Text)
+  public func saveEarnings(memberId : Text, earningsJson : Text) : async () {
+    memberEarnings.add(memberId, earningsJson);
+  };
+
+  public query func getEarnings(memberId : Text) : async ?Text {
+    memberEarnings.get(memberId);
+  };
+
+  public shared ({ caller }) func deleteEarnings(memberId : Text) : async () {
+    enforceAdmin(caller);
+    memberEarnings.remove(memberId);
+  };
+};

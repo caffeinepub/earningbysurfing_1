@@ -298,6 +298,9 @@ export const idlFactory = ({ IDL }) => {
     'deleteInventoryProduct' : IDL.Func([IDL.Nat], [], []),
     'deleteProduct' : IDL.Func([IDL.Nat], [], []),
     'fetchClickbankProducts' : IDL.Func([IDL.Text], [IDL.Text], []),
+    'deleteEarnings' : IDL.Func([IDL.Text], [], []),
+    'getEarnings' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
+    'saveEarnings' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'getAffiliateConfigStatus' : IDL.Func(
         [],
         [AffiliateConfigStatus],

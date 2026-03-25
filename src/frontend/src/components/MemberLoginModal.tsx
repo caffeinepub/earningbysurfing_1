@@ -96,7 +96,7 @@ export default function MemberLoginModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md" data-ocid="member_login.dialog">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-center text-[#FF9933]">
+          <DialogTitle className="text-xl font-bold text-center text-[#F37D22]">
             Member Login
           </DialogTitle>
         </DialogHeader>
@@ -115,7 +115,7 @@ export default function MemberLoginModal({
               placeholder="e.g. 1234 or james.smith1@earningbysurfing.com"
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              className="border-[#FF9933]/40 focus-visible:ring-[#FF9933] focus-visible:border-[#FF9933]"
+              className="border-[#F37D22]/40 focus-visible:ring-[#F37D22] focus-visible:border-[#F37D22]"
               autoFocus
               data-ocid="member_login.input"
             />
@@ -134,7 +134,7 @@ export default function MemberLoginModal({
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="border-[#FF9933]/40 focus-visible:ring-[#FF9933] focus-visible:border-[#FF9933]"
+              className="border-[#F37D22]/40 focus-visible:ring-[#F37D22] focus-visible:border-[#F37D22]"
               data-ocid="member_login.input"
             />
           </div>
@@ -150,7 +150,7 @@ export default function MemberLoginModal({
 
           <Button
             type="submit"
-            className="w-full bg-[#FF9933] hover:bg-orange-600 text-white font-bold uppercase tracking-wider"
+            className="w-full bg-[#F37D22] hover:bg-orange-600 text-white font-bold uppercase tracking-wider"
             disabled={loading}
             data-ocid="member_login.submit_button"
           >

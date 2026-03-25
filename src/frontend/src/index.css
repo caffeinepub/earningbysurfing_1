@@ -7,7 +7,7 @@
 @layer base {
   :root {
     --radius: 0.375rem;
-    /* Saffron #FF9933 -> oklch ~0.75 0.185 55 */
+    /* Saffron #F37D22 -> oklch ~0.75 0.185 55 */
     --saffron: 0.75 0.185 55;
     /* White */
     --background: 1 0 0;

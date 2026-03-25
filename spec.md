@@ -1,32 +1,39 @@
 # EarningBySurfing
 
 ## Current State
-The Admin Panel at `/admin` has multiple tabs: Members, Products, Orders, Global Insights, Vendor Requests, Settings, Pages. There is no Agent Status dashboard. The platform has three functional areas that were previously described as 'AI Agents': Marketing Agent (ClickBank lead scanning), Member Agent (4000-member login sync), and AI Product Hunter (ClickBank API integration).
+- Full platform with member login (localStorage-based, 4000 members), admin panel, product inventory, vendor portal, agent status dashboard
+- Earnings data is stored in localStorage only and resets on page refresh
+- No SHOP ALL page -- SHOP ALL navbar link redirects to homepage
+- Navbar search bar is non-functional (no click handler)
+- Admin Change Password is missing from Settings tab
+- No lead research tool or referral link system
 
 ## Requested Changes (Diff)
 
 ### Add
-- New "Agent Status" tab in the Admin Panel (shown FIRST in the tab list)
-- Agent Status dashboard with 3 agent cards:
-  1. **Marketing Agent** -- status indicator (Active/Standby), last scan time, leads found count, "Scan for Leads" trigger button that queries ClickBank affiliate marketplace for affiliate marketers/dropshippers
-  2. **Member Agent** -- status indicator, total members in DB, last login count (last 24h from localStorage), sync status
-  3. **AI Product Hunter** -- status indicator (Active if ClickBank keys set, Standby if not), ClickBank API connection status (reads from existing settings), products fetched count
-- Each agent card shows: status badge (green ACTIVE / yellow STANDBY), last activity timestamp, key metric, action button
-- "Scan for Leads" button performs a simulated ClickBank affiliate search (fetches ClickBank marketplace categories as proxy for affiliate network data), shows results as a list of affiliate program leads with name, category, commission rate
-- Scan results stored in localStorage (`ebs_lead_scan_results`) and displayed in a results panel below the agent cards
-- Live activity log panel at the bottom showing timestamped log entries for agent actions
-- All in Saffron (#FF9933) and white theme
+- **Earnings Persistence**: Backend `saveEarnings(memberId, data)` and `getEarnings(memberId)` endpoints to persist earnings by member ID (Text key, no ICP auth required since member system is custom)
+- **SHOP ALL Page** (`/shop`): Public page showing all inventory products with search/filter by category; logged-in members see "Generate Smart Link" button per product
+- **Search Bar**: Connect navbar search input to navigate to `/shop?q=searchterm`
+- **Admin Change Password**: Working form in Admin Settings tab that validates current password and saves new one to localStorage (same pattern as existing admin auth)
+- **Manual Lead Research Tool**: New tab or section in member dashboard with buttons to open Reddit, Facebook Groups, LinkedIn searches in new tab for affiliate outreach
+- **Referral/Invite Link System**: Member dashboard shows unique referral URL (`siteUrl?ref=MEMBERID`), copy-to-clipboard button, and tracks referral count
 
 ### Modify
-- Admin Panel tab order: Agent Status tab added as the first tab
+- `DashboardPage.tsx`: Load earnings from backend on mount, save to backend whenever earnings change
+- `AdminPage.tsx`: Add Change Password section to Settings tab
+- `Navbar.tsx`: Connect search bar submit to `/shop?q=query`
+- Backend `main.mo`: Add earnings storage map and two endpoints
 
 ### Remove
-- Nothing removed
+- Nothing
 
 ## Implementation Plan
-1. Add `AgentStatusTab` component with 3 agent cards
-2. Marketing Agent card: reads `ebs_lead_scan_results` from localStorage, "Scan for Leads" button triggers ClickBank marketplace API call (using existing http-outcall pattern or simulated fetch to ClickBank categories), stores results
-3. Member Agent card: reads `ebs_members` from localStorage, counts entries, reads recent login activity
-4. AI Product Hunter card: checks localStorage for ClickBank API key settings (`ebs_clickbank_key`), shows Active/Standby accordingly
-5. Activity log: appended to localStorage `ebs_agent_log`, displayed as scrollable list
-6. Insert AgentStatusTab as first tab in AdminPage
+1. Add `EarningsRecord` type and `earningsData` map to Motoko backend; add `saveEarnings(memberId: Text, data: EarningsJSON: Text)` and `getEarnings(memberId: Text) : async ?Text` (store as JSON text to avoid complex Candid types)
+2. Regenerate frontend bindings
+3. Create `/shop` route and `ShopAllPage.tsx` with search/filter, product cards, and conditional Smart Link generation
+4. Update `DashboardPage.tsx` to call `getEarnings` on load and `saveEarnings` on any earnings update
+5. Add working search handler to `Navbar.tsx`
+6. Add Change Password form to Admin Settings tab in `AdminPage.tsx`
+7. Add Lead Research Tool section to `DashboardPage.tsx`
+8. Add Referral/Invite Link section to `DashboardPage.tsx`
+9. Add `/shop` route to router

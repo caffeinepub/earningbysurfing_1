@@ -150,6 +150,9 @@ export interface _SERVICE {
   'updateProduct' : ActorMethod<[bigint, Product], undefined>,
   'updateSiteSettings' : ActorMethod<[SiteSettings], undefined>,
   'updateVendorRequestStatus' : ActorMethod<[bigint, string], undefined>,
+  'deleteEarnings' : ActorMethod<[string], undefined>,
+  'getEarnings' : ActorMethod<[string], [] | [string]>,
+  'saveEarnings' : ActorMethod<[string, string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

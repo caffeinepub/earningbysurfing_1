@@ -10,11 +10,13 @@ import {
   ArrowUpRight,
   BarChart3,
   Calendar,
+  Copy,
   Cpu,
   DollarSign,
   ExternalLink,
   Facebook,
   Instagram,
+  Link2,
   Loader2,
   LogOut,
   MessageCircle,
@@ -35,6 +37,8 @@ import { useMemberAuth } from "../hooks/useMemberAuth";
 import {
   useAllInventoryProducts,
   useFetchClickbankProducts,
+  useGetEarnings,
+  useSaveEarnings,
 } from "../hooks/useQueries";
 import { getDailyBatch } from "../utils/dailyBatch";
 import { generateHeadline } from "../utils/headlineEngine";
@@ -583,7 +587,7 @@ function AnalyticsBuyerSection() {
                   </div>
                   <button
                     type="button"
-                    className="self-start border border-[#FF9933] text-[#FF9933] text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full hover:bg-[#FF9933] hover:text-white transition-colors"
+                    className="self-start border border-[#F37D22] text-[#F37D22] text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full hover:bg-[#F37D22] hover:text-white transition-colors"
                     onClick={() => {
                       const key = `${platform.name}-${topic.topic}`;
                       const headline = generateHeadline(
@@ -601,7 +605,7 @@ function AnalyticsBuyerSection() {
                     Get AI Ad Headline
                   </button>
                   {headlines[`${platform.name}-${topic.topic}`] && (
-                    <p className="text-xs italic text-[#FF9933] normal-case leading-snug">
+                    <p className="text-xs italic text-[#F37D22] normal-case leading-snug">
                       {headlines[`${platform.name}-${topic.topic}`]}
                     </p>
                   )}
@@ -688,7 +692,7 @@ function ClickbankHunterSection({ memberId }: { memberId: number }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleFetch()}
-            className="w-full pl-9 pr-4 py-2 border border-[#FF9933]/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF9933]/50 bg-white"
+            className="w-full pl-9 pr-4 py-2 border border-[#F37D22]/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F37D22]/50 bg-white"
             data-ocid="clickbank.search_input"
           />
         </div>
@@ -696,7 +700,7 @@ function ClickbankHunterSection({ memberId }: { memberId: number }) {
           type="button"
           onClick={handleFetch}
           disabled={isPending || !query.trim()}
-          className="flex items-center gap-2 px-5 py-2 bg-[#FF9933] text-white font-black uppercase tracking-widest text-xs rounded-lg hover:bg-[#e8891e] disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 px-5 py-2 bg-[#F37D22] text-white font-black uppercase tracking-widest text-xs rounded-lg hover:bg-[#e8891e] disabled:opacity-50 transition-colors"
           data-ocid="clickbank.primary_button"
         >
           {isPending ? (
@@ -710,12 +714,12 @@ function ClickbankHunterSection({ memberId }: { memberId: number }) {
 
       {notConfigured && (
         <div
-          className="rounded-xl border border-[#FF9933]/40 bg-[#FF9933]/10 p-4 mb-4 flex items-start gap-3"
+          className="rounded-xl border border-[#F37D22]/40 bg-[#F37D22]/10 p-4 mb-4 flex items-start gap-3"
           data-ocid="clickbank.error_state"
         >
-          <Sparkles className="h-5 w-5 text-[#FF9933] flex-shrink-0 mt-0.5" />
+          <Sparkles className="h-5 w-5 text-[#F37D22] flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-bold text-[#FF9933] uppercase tracking-wide">
+            <p className="text-sm font-bold text-[#F37D22] uppercase tracking-wide">
               ClickBank API Not Configured
             </p>
             <p className="text-xs text-muted-foreground normal-case mt-0.5">
@@ -766,7 +770,7 @@ function ClickbankHunterSection({ memberId }: { memberId: number }) {
                     href={`${product.hoplink}?tid=MEMBER_${memberId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-1 bg-[#FF9933] text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-lg hover:bg-[#e8891e] transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1 bg-[#F37D22] text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-lg hover:bg-[#e8891e] transition-colors"
                     data-ocid={`clickbank.primary_button.${i + 1}`}
                   >
                     <ExternalLink className="h-3 w-3" />
@@ -932,6 +936,204 @@ function MyEarningsSection({
   );
 }
 
+// ─── Lead Finder + Referral Section ────────────────────────────────────────
+
+function LeadFinderSection({
+  memberId,
+  memberName,
+}: { memberId: number; memberName: string }) {
+  const [redditKeyword, setRedditKeyword] = useState(
+    "affiliate marketing products",
+  );
+  const [fbKeyword, setFbKeyword] = useState("dropshipping business");
+  const [liKeyword, setLiKeyword] = useState("affiliate marketer");
+
+  const referralUrl = `${window.location.origin}?ref=${memberId}`;
+
+  const handleCopyReferral = () => {
+    navigator.clipboard
+      .writeText(referralUrl)
+      .then(() => {
+        toast.success("Referral link copied!");
+      })
+      .catch(() => {
+        toast.success("Referral link ready!", { description: referralUrl });
+      });
+  };
+
+  return (
+    <section className="mb-10" data-ocid="lead_finder.section">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 bg-saffron/10 rounded-lg">
+          <Search className="h-5 w-5 text-saffron" />
+        </div>
+        <div>
+          <h2 className="text-xl font-black uppercase tracking-widest text-saffron">
+            Lead Research Tool
+          </h2>
+          <p className="text-xs text-muted-foreground normal-case">
+            Find affiliate marketers and dropshippers manually.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Reddit */}
+        <div
+          className="bg-white rounded-xl border border-border shadow-card p-5"
+          data-ocid="lead_finder.card"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-8 w-8 rounded-full bg-[#FF4500]/10 flex items-center justify-center">
+              <span className="text-sm font-black text-[#FF4500]">R</span>
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest">
+                Reddit
+              </p>
+              <p className="text-[10px] text-muted-foreground normal-case">
+                Search affiliate communities
+              </p>
+            </div>
+          </div>
+          <input
+            type="text"
+            value={redditKeyword}
+            onChange={(e) => setRedditKeyword(e.target.value)}
+            className="w-full text-xs border border-border rounded-lg px-3 py-2 mb-3 outline-none focus:border-saffron"
+            placeholder="Search keyword..."
+            data-ocid="lead_finder.input"
+          />
+          <a
+            href={`https://www.reddit.com/search/?q=${encodeURIComponent(`${redditKeyword} affiliate marketing`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 w-full bg-[#F37D22] text-white text-xs font-bold uppercase tracking-wider rounded-lg py-2 hover:bg-orange-600 transition-colors"
+            data-ocid="lead_finder.button"
+          >
+            <ExternalLink className="h-3.5 w-3.5" /> Search Reddit
+          </a>
+        </div>
+
+        {/* Facebook Groups */}
+        <div
+          className="bg-white rounded-xl border border-border shadow-card p-5"
+          data-ocid="lead_finder.card"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-8 w-8 rounded-full bg-[#1877F2]/10 flex items-center justify-center">
+              <Facebook className="h-4 w-4 text-[#1877F2]" />
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest">
+                Facebook Groups
+              </p>
+              <p className="text-[10px] text-muted-foreground normal-case">
+                Find dropship communities
+              </p>
+            </div>
+          </div>
+          <input
+            type="text"
+            value={fbKeyword}
+            onChange={(e) => setFbKeyword(e.target.value)}
+            className="w-full text-xs border border-border rounded-lg px-3 py-2 mb-3 outline-none focus:border-saffron"
+            placeholder="Search keyword..."
+            data-ocid="lead_finder.input"
+          />
+          <a
+            href={`https://www.facebook.com/groups/search/results/?q=${encodeURIComponent(`${fbKeyword} dropshipping`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 w-full bg-[#F37D22] text-white text-xs font-bold uppercase tracking-wider rounded-lg py-2 hover:bg-orange-600 transition-colors"
+            data-ocid="lead_finder.button"
+          >
+            <ExternalLink className="h-3.5 w-3.5" /> Search Facebook
+          </a>
+        </div>
+
+        {/* LinkedIn */}
+        <div
+          className="bg-white rounded-xl border border-border shadow-card p-5"
+          data-ocid="lead_finder.card"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-8 w-8 rounded-full bg-[#0A66C2]/10 flex items-center justify-center">
+              <span className="text-xs font-black text-[#0A66C2]">in</span>
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest">
+                LinkedIn
+              </p>
+              <p className="text-[10px] text-muted-foreground normal-case">
+                Find professional marketers
+              </p>
+            </div>
+          </div>
+          <input
+            type="text"
+            value={liKeyword}
+            onChange={(e) => setLiKeyword(e.target.value)}
+            className="w-full text-xs border border-border rounded-lg px-3 py-2 mb-3 outline-none focus:border-saffron"
+            placeholder="Search keyword..."
+            data-ocid="lead_finder.input"
+          />
+          <a
+            href={`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(`${liKeyword} affiliate marketer`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 w-full bg-[#F37D22] text-white text-xs font-bold uppercase tracking-wider rounded-lg py-2 hover:bg-orange-600 transition-colors"
+            data-ocid="lead_finder.button"
+          >
+            <ExternalLink className="h-3.5 w-3.5" /> Search LinkedIn
+          </a>
+        </div>
+      </div>
+
+      {/* Referral Link Card */}
+      <div
+        className="bg-white rounded-xl border-2 border-[#F37D22]/30 shadow-card p-5"
+        data-ocid="referral.card"
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-saffron/10 rounded-lg">
+            <Link2 className="h-5 w-5 text-saffron" />
+          </div>
+          <div>
+            <h3 className="text-sm font-black uppercase tracking-widest text-saffron">
+              My Referral Link
+            </h3>
+            <p className="text-[10px] text-muted-foreground normal-case">
+              Share with friends to earn bonus commissions
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div
+            className="flex-1 bg-muted/50 border border-border rounded-lg px-3 py-2 text-xs font-mono text-foreground normal-case break-all min-w-0"
+            data-ocid="referral.input"
+          >
+            {referralUrl}
+          </div>
+          <Button
+            size="sm"
+            className="bg-[#F37D22] hover:bg-orange-600 text-white font-bold uppercase tracking-wider text-xs flex-shrink-0"
+            onClick={handleCopyReferral}
+            data-ocid="referral.button"
+          >
+            <Copy className="h-3.5 w-3.5 mr-1.5" /> Copy Link
+          </Button>
+        </div>
+        <p className="text-[10px] text-muted-foreground normal-case mt-3">
+          &#128279; Your referral ID:{" "}
+          <span className="font-bold text-saffron">#{memberId}</span> —{" "}
+          {memberName}
+        </p>
+      </div>
+    </section>
+  );
+}
+
 // ─── Main Dashboard ────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
@@ -951,12 +1153,44 @@ export default function DashboardPage() {
     }
   }, [memberSession]);
 
+  const memberIdStr = currentMember ? String(currentMember.id) : null;
+  const { data: savedEarningsJson } = useGetEarnings(memberIdStr);
+  const { mutate: saveEarnings } = useSaveEarnings();
+
   const [earningsData, setEarningsData] = useState<EarningsData>({
     totalEarned: 0,
     pendingPayout: 0,
     linksGenerated: 0,
     transactions: [],
   });
+  const [earningsLoaded, setEarningsLoaded] = useState(false);
+
+  // Load saved earnings from backend on mount
+  useEffect(() => {
+    if (savedEarningsJson && !earningsLoaded) {
+      try {
+        const parsed = JSON.parse(savedEarningsJson) as EarningsData;
+        setEarningsData(parsed);
+        setEarningsLoaded(true);
+      } catch {
+        setEarningsLoaded(true);
+      }
+    } else if (savedEarningsJson === null && !earningsLoaded && memberIdStr) {
+      setEarningsLoaded(true);
+    }
+  }, [savedEarningsJson, earningsLoaded, memberIdStr]);
+
+  // Debounced save whenever earnings change
+  useEffect(() => {
+    if (!memberIdStr || !earningsLoaded) return;
+    const timer = setTimeout(() => {
+      saveEarnings({
+        memberId: memberIdStr,
+        earningsJson: JSON.stringify(earningsData),
+      });
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [earningsData, memberIdStr, earningsLoaded, saveEarnings]);
 
   const handleLogout = () => {
     logoutMember();
@@ -1164,6 +1398,12 @@ export default function DashboardPage() {
 
         {/* ─── Analytics & Buyer Intent ─── */}
         <AnalyticsBuyerSection />
+
+        {/* ─── Lead Finder + Referral ─── */}
+        <LeadFinderSection
+          memberId={currentMember.id}
+          memberName={currentMember.name}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent Activity */}

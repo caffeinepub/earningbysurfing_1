@@ -16,7 +16,7 @@ export default function AboutPage() {
   return (
     <div className="min-h-[60vh] bg-white">
       {/* Hero header */}
-      <div className="bg-[#FF9933] text-white">
+      <div className="bg-[#F37D22] text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -51,7 +51,7 @@ export default function AboutPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="prose prose-lg max-w-none prose-headings:text-[#FF9933] prose-headings:font-black prose-headings:uppercase prose-headings:tracking-wide"
+            className="prose prose-lg max-w-none prose-headings:text-[#F37D22] prose-headings:font-black prose-headings:uppercase prose-headings:tracking-wide"
             // biome-ignore lint/security/noDangerouslySetInnerHtml: Admin-managed CMS content
             dangerouslySetInnerHTML={{ __html: pageContent.content }}
             data-ocid="about.section"
@@ -63,17 +63,17 @@ export default function AboutPage() {
             className="text-center py-16"
             data-ocid="about.empty_state"
           >
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#FF9933]/10 mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#F37D22]/10 mb-6">
               <span className="text-2xl">✦</span>
             </div>
-            <h2 className="text-2xl font-black uppercase tracking-widest text-[#FF9933] mb-4">
+            <h2 className="text-2xl font-black uppercase tracking-widest text-[#F37D22] mb-4">
               Our Story
             </h2>
             <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed">
               EarningBySurfing is a premium global affiliate and e-commerce
               platform connecting 4,000 members with high-demand products
               worldwide. Our slogan,{" "}
-              <strong className="text-[#FF9933]">
+              <strong className="text-[#F37D22]">
                 &ldquo;One World One Future&rdquo;
               </strong>
               , reflects our commitment to global opportunity and shared

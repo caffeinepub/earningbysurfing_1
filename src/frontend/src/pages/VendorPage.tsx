@@ -116,7 +116,7 @@ export default function VendorPage() {
         className="relative py-20 overflow-hidden"
         style={{
           background:
-            "linear-gradient(135deg, #1a0a00 0%, #3d1f00 50%, #ff9933 130%)",
+            "linear-gradient(135deg, #1a0a00 0%, #3d1f00 50%, #F37D22 130%)",
         }}
       >
         <div className="relative z-10 max-w-3xl mx-auto px-4 text-center">

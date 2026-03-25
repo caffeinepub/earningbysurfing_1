@@ -41,7 +41,7 @@ function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
     <div ref={ref} className="relative">
       <button
         type="button"
-        className={`flex items-center gap-1.5 border border-[#FF9933] rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#FF9933] hover:bg-[#FF9933] hover:text-white transition-colors ${
+        className={`flex items-center gap-1.5 border border-[#F37D22] rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-[#F37D22] hover:bg-[#F37D22] hover:text-white transition-colors ${
           mobile ? "w-full justify-center" : ""
         }`}
         onClick={() => {
@@ -84,8 +84,8 @@ function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
             </div>
           </div>
 
-          <div className="px-3 py-1 bg-[#FF9933]/5 border-b border-gray-100">
-            <span className="text-[10px] text-[#FF9933] font-semibold uppercase tracking-wider">
+          <div className="px-3 py-1 bg-[#F37D22]/5 border-b border-gray-100">
+            <span className="text-[10px] text-[#F37D22] font-semibold uppercase tracking-wider">
               {filtered.length} language{filtered.length !== 1 ? "s" : ""}{" "}
               available
             </span>
@@ -103,8 +103,8 @@ function LanguageDropdown({ mobile = false }: { mobile?: boolean }) {
                   type="button"
                   className={`w-full text-left px-3 py-2 transition-colors flex items-center justify-between gap-2 ${
                     language === opt.code
-                      ? "bg-[#FF9933]/10 text-[#FF9933]"
-                      : "text-gray-700 hover:bg-[#FF9933]/5 hover:text-[#FF9933]"
+                      ? "bg-[#F37D22]/10 text-[#F37D22]"
+                      : "text-gray-700 hover:bg-[#F37D22]/5 hover:text-[#F37D22]"
                   }`}
                   onClick={() => {
                     setLanguage(opt.code);
@@ -281,15 +281,15 @@ function Logo3D() {
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _navigate = useNavigate();
+  const navigate = useNavigate();
+  const [navSearch, setNavSearch] = useState("");
   const { member, loginMember, logoutMember } = useMemberAuth();
   const isAdminAuthed = useAdminAuth();
   const { t } = useLanguage();
 
   const navLinks = [
     { labelKey: "HOME", to: "/" },
-    { labelKey: "SHOP ALL", to: "/" },
+    { labelKey: "SHOP ALL", to: "/shop" },
     { labelKey: "TRENDING", to: "/" },
     { labelKey: "ABOUT", to: "/about" },
   ];
@@ -298,7 +298,7 @@ export default function Navbar() {
     <header className="bg-white border-b border-border sticky top-0 z-50">
       {/* Top utility strip */}
       <div
-        className="bg-[#FF9933] text-white text-center py-1.5"
+        className="bg-[#F37D22] text-white text-center py-1.5"
         style={{ letterSpacing: "0.15em" }}
       >
         <span className="text-[11px] font-bold uppercase tracking-[0.18em]">
@@ -326,7 +326,7 @@ export default function Navbar() {
               <Link
                 key={link.labelKey}
                 to={link.to}
-                className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors whitespace-nowrap"
+                className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#F37D22] transition-colors whitespace-nowrap"
                 data-ocid="nav.link"
               >
                 {t(link.labelKey)}
@@ -334,7 +334,7 @@ export default function Navbar() {
             ))}
             <Link
               to="/vendor"
-              className="text-xs font-bold uppercase tracking-widest bg-[#FF9933] text-white px-3 py-1.5 rounded-full hover:bg-orange-600 transition-colors whitespace-nowrap"
+              className="text-xs font-bold uppercase tracking-widest bg-[#F37D22] text-white px-3 py-1.5 rounded-full hover:bg-orange-600 transition-colors whitespace-nowrap"
               data-ocid="nav.link"
             >
               VENDOR
@@ -342,7 +342,7 @@ export default function Navbar() {
             {member && (
               <Link
                 to="/dashboard"
-                className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors whitespace-nowrap"
+                className="text-xs font-semibold uppercase tracking-widest text-foreground hover:text-[#F37D22] transition-colors whitespace-nowrap"
                 data-ocid="nav.link"
               >
                 {t("DASHBOARD")}
@@ -351,7 +351,7 @@ export default function Navbar() {
             {isAdminAuthed && (
               <Link
                 to="/admin"
-                className="text-xs font-bold uppercase tracking-widest text-[#FF9933] hover:text-orange-600 transition-colors whitespace-nowrap border border-[#FF9933] px-2 py-1 rounded"
+                className="text-xs font-bold uppercase tracking-widest text-[#F37D22] hover:text-orange-600 transition-colors whitespace-nowrap border border-[#F37D22] px-2 py-1 rounded"
                 data-ocid="nav.link"
               >
                 ADMIN
@@ -365,31 +365,44 @@ export default function Navbar() {
           {/* FAR RIGHT: Language + Search + Icons + Login */}
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
             <LanguageDropdown />
-            <div className="flex items-center border border-border rounded-full overflow-hidden">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (navSearch.trim()) {
+                  navigate({
+                    to: "/shop",
+                    search: { q: navSearch.trim() } as any,
+                  });
+                }
+              }}
+              className="flex items-center border border-border rounded-full overflow-hidden"
+            >
               <input
                 type="text"
                 placeholder="Search..."
+                value={navSearch}
+                onChange={(e) => setNavSearch(e.target.value)}
                 className="px-3 py-1.5 text-xs outline-none bg-transparent w-20"
                 data-ocid="search.input"
               />
               <button
-                type="button"
-                className="bg-[#FF9933] px-3 py-1.5 text-white"
+                type="submit"
+                className="bg-[#F37D22] px-3 py-1.5 text-white"
                 data-ocid="search.button"
               >
                 <Search className="h-3.5 w-3.5" />
               </button>
-            </div>
+            </form>
             <button
               type="button"
-              className="p-2 text-foreground hover:text-[#FF9933] transition-colors"
+              className="p-2 text-foreground hover:text-[#F37D22] transition-colors"
               aria-label="Wishlist"
             >
               <Heart className="h-5 w-5" />
             </button>
             <button
               type="button"
-              className="p-2 text-foreground hover:text-[#FF9933] transition-colors"
+              className="p-2 text-foreground hover:text-[#F37D22] transition-colors"
               aria-label="Cart"
             >
               <ShoppingCart className="h-5 w-5" />
@@ -398,7 +411,7 @@ export default function Navbar() {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-[#FF9933] text-[#FF9933] hover:bg-[#FF9933] hover:text-white text-xs uppercase tracking-wider font-bold"
+                className="border-[#F37D22] text-[#F37D22] hover:bg-[#F37D22] hover:text-white text-xs uppercase tracking-wider font-bold"
                 onClick={() => logoutMember()}
                 data-ocid="nav.button"
               >
@@ -407,7 +420,7 @@ export default function Navbar() {
             ) : (
               <Button
                 size="sm"
-                className="bg-[#FF9933] hover:bg-orange-600 text-white text-xs uppercase tracking-wider font-bold"
+                className="bg-[#F37D22] hover:bg-orange-600 text-white text-xs uppercase tracking-wider font-bold"
                 onClick={() => setLoginOpen(true)}
                 data-ocid="nav.button"
               >
@@ -451,7 +464,7 @@ export default function Navbar() {
             <Link
               key={link.labelKey}
               to={link.to}
-              className="text-sm font-semibold uppercase tracking-widest text-foreground hover:text-[#FF9933] transition-colors py-2"
+              className="text-sm font-semibold uppercase tracking-widest text-foreground hover:text-[#F37D22] transition-colors py-2"
               onClick={() => setMenuOpen(false)}
               data-ocid="nav.link"
             >
@@ -460,7 +473,7 @@ export default function Navbar() {
           ))}
           <Link
             to="/vendor"
-            className="text-sm font-bold uppercase tracking-widest bg-[#FF9933] text-white px-4 py-2 rounded-full text-center"
+            className="text-sm font-bold uppercase tracking-widest bg-[#F37D22] text-white px-4 py-2 rounded-full text-center"
             onClick={() => setMenuOpen(false)}
             data-ocid="nav.link"
           >
@@ -469,7 +482,7 @@ export default function Navbar() {
           {member && (
             <Link
               to="/dashboard"
-              className="text-sm font-semibold uppercase tracking-widest text-[#FF9933] py-2"
+              className="text-sm font-semibold uppercase tracking-widest text-[#F37D22] py-2"
               onClick={() => setMenuOpen(false)}
               data-ocid="nav.link"
             >
@@ -479,7 +492,7 @@ export default function Navbar() {
           {isAdminAuthed && (
             <Link
               to="/admin"
-              className="text-sm font-semibold uppercase tracking-widest text-[#FF9933] py-2 border border-[#FF9933] px-3 rounded text-center"
+              className="text-sm font-semibold uppercase tracking-widest text-[#F37D22] py-2 border border-[#F37D22] px-3 rounded text-center"
               onClick={() => setMenuOpen(false)}
               data-ocid="nav.link"
             >
@@ -493,7 +506,7 @@ export default function Navbar() {
             {member ? (
               <Button
                 variant="outline"
-                className="w-full border-[#FF9933] text-[#FF9933] font-bold uppercase tracking-wider"
+                className="w-full border-[#F37D22] text-[#F37D22] font-bold uppercase tracking-wider"
                 onClick={() => {
                   logoutMember();
                   setMenuOpen(false);
@@ -504,7 +517,7 @@ export default function Navbar() {
               </Button>
             ) : (
               <Button
-                className="w-full bg-[#FF9933] text-white font-bold uppercase tracking-wider"
+                className="w-full bg-[#F37D22] text-white font-bold uppercase tracking-wider"
                 onClick={() => {
                   setLoginOpen(true);
                   setMenuOpen(false);

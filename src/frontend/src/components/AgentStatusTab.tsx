@@ -297,10 +297,10 @@ export default function AgentStatusTab({
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-1">
-          <div className="bg-[#FF9933] rounded-lg p-2">
+          <div className="bg-[#F37D22] rounded-lg p-2">
             <Radio className="h-5 w-5 text-white" />
           </div>
-          <h2 className="text-2xl font-black uppercase tracking-wide text-[#FF9933]">
+          <h2 className="text-2xl font-black uppercase tracking-wide text-[#F37D22]">
             Agent Command Center
           </h2>
         </div>
@@ -319,7 +319,7 @@ export default function AgentStatusTab({
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-[#FF9933]" />
+                <Search className="h-4 w-4 text-[#F37D22]" />
                 <CardTitle className="text-sm font-black uppercase tracking-widest">
                   Marketing Agent
                 </CardTitle>
@@ -338,7 +338,7 @@ export default function AgentStatusTab({
           <CardContent className="space-y-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-3xl font-black text-[#FF9933]">
+                <span className="text-3xl font-black text-[#F37D22]">
                   {leads.length}
                 </span>
                 <span className="text-xs text-muted-foreground font-medium">
@@ -357,7 +357,7 @@ export default function AgentStatusTab({
             <Button
               onClick={handleScanLeads}
               disabled={isScanning}
-              className="w-full bg-[#FF9933] hover:bg-[#e6871f] text-white font-bold text-xs uppercase tracking-widest"
+              className="w-full bg-[#F37D22] hover:bg-[#e6871f] text-white font-bold text-xs uppercase tracking-widest"
               data-ocid="agent_status.scan_button"
             >
               {isScanning ? (
@@ -381,7 +381,7 @@ export default function AgentStatusTab({
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-[#FF9933]" />
+                <Users className="h-4 w-4 text-[#F37D22]" />
                 <CardTitle className="text-sm font-black uppercase tracking-widest">
                   Member Agent
                 </CardTitle>
@@ -394,7 +394,7 @@ export default function AgentStatusTab({
           <CardContent className="space-y-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-3xl font-black text-[#FF9933]">
+                <span className="text-3xl font-black text-[#F37D22]">
                   {memberCount.toLocaleString()}
                 </span>
                 <span className="text-xs text-muted-foreground font-medium">
@@ -411,7 +411,7 @@ export default function AgentStatusTab({
             <Button
               onClick={handleSyncMembers}
               variant="outline"
-              className="w-full border-[#FF9933] text-[#FF9933] hover:bg-[#FF9933]/10 font-bold text-xs uppercase tracking-widest"
+              className="w-full border-[#F37D22] text-[#F37D22] hover:bg-[#F37D22]/10 font-bold text-xs uppercase tracking-widest"
               data-ocid="agent_status.sync_button"
             >
               <RefreshCw className="h-4 w-4 mr-2" /> Sync Database
@@ -427,7 +427,7 @@ export default function AgentStatusTab({
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-[#FF9933]" />
+                <Zap className="h-4 w-4 text-[#F37D22]" />
                 <CardTitle className="text-sm font-black uppercase tracking-widest">
                   AI Product Hunter
                 </CardTitle>
@@ -462,7 +462,7 @@ export default function AgentStatusTab({
               <Button
                 onClick={handleCheckApiStatus}
                 variant="outline"
-                className="flex-1 border-[#FF9933] text-[#FF9933] hover:bg-[#FF9933]/10 font-bold text-xs uppercase tracking-widest"
+                className="flex-1 border-[#F37D22] text-[#F37D22] hover:bg-[#F37D22]/10 font-bold text-xs uppercase tracking-widest"
                 data-ocid="agent_status.check_api_button"
               >
                 <Activity className="h-4 w-4 mr-1" /> Refresh
@@ -475,7 +475,7 @@ export default function AgentStatusTab({
                       "Navigate to Settings tab to enter ClickBank API keys.",
                     );
                 }}
-                className="flex-1 bg-[#FF9933] hover:bg-[#e6871f] text-white font-bold text-xs uppercase tracking-widest"
+                className="flex-1 bg-[#F37D22] hover:bg-[#e6871f] text-white font-bold text-xs uppercase tracking-widest"
                 data-ocid="agent_status.settings_button"
               >
                 <Settings className="h-4 w-4 mr-1" /> Settings
@@ -497,8 +497,8 @@ export default function AgentStatusTab({
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Search className="h-4 w-4 text-[#FF9933]" />
-                  <CardTitle className="text-sm font-black uppercase tracking-widest text-[#FF9933]">
+                  <Search className="h-4 w-4 text-[#F37D22]" />
+                  <CardTitle className="text-sm font-black uppercase tracking-widest text-[#F37D22]">
                     Scanned Affiliate Leads ({leads.length})
                   </CardTitle>
                 </div>
@@ -526,23 +526,23 @@ export default function AgentStatusTab({
               <div className="overflow-auto max-h-[360px]">
                 <Table>
                   <TableHeader className="sticky top-0 bg-white z-10">
-                    <TableRow className="border-b border-[#FF9933]/20">
-                      <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest w-10">
+                    <TableRow className="border-b border-[#F37D22]/20">
+                      <TableHead className="text-[#F37D22] font-bold text-xs uppercase tracking-widest w-10">
                         #
                       </TableHead>
-                      <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest">
+                      <TableHead className="text-[#F37D22] font-bold text-xs uppercase tracking-widest">
                         Lead Name
                       </TableHead>
-                      <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest">
+                      <TableHead className="text-[#F37D22] font-bold text-xs uppercase tracking-widest">
                         Niche
                       </TableHead>
-                      <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest text-center">
+                      <TableHead className="text-[#F37D22] font-bold text-xs uppercase tracking-widest text-center">
                         Commission
                       </TableHead>
-                      <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest text-center">
+                      <TableHead className="text-[#F37D22] font-bold text-xs uppercase tracking-widest text-center">
                         Gravity
                       </TableHead>
-                      <TableHead className="text-[#FF9933] font-bold text-xs uppercase tracking-widest text-center">
+                      <TableHead className="text-[#F37D22] font-bold text-xs uppercase tracking-widest text-center">
                         Action
                       </TableHead>
                     </TableRow>
@@ -563,7 +563,7 @@ export default function AgentStatusTab({
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className="text-xs border-[#FF9933]/40 text-[#FF9933]"
+                            className="text-xs border-[#F37D22]/40 text-[#F37D22]"
                           >
                             {lead.niche}
                           </Badge>
@@ -581,7 +581,7 @@ export default function AgentStatusTab({
                         <TableCell className="text-center">
                           <Button
                             size="sm"
-                            className="bg-[#FF9933] hover:bg-[#e6871f] text-white font-bold text-xs h-7 px-3"
+                            className="bg-[#F37D22] hover:bg-[#e6871f] text-white font-bold text-xs h-7 px-3"
                             onClick={() =>
                               toast.info("Lead contact feature coming soon.")
                             }
@@ -608,7 +608,7 @@ export default function AgentStatusTab({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-[#FF9933]" />
+              <Activity className="h-4 w-4 text-[#F37D22]" />
               <CardTitle className="text-sm font-black uppercase tracking-widest">
                 Agent Activity Log
               </CardTitle>
@@ -643,7 +643,7 @@ export default function AgentStatusTab({
                   <span
                     className={`mt-0.5 h-2 w-2 rounded-full flex-shrink-0 ${
                       entry.type === "scan"
-                        ? "bg-[#FF9933]"
+                        ? "bg-[#F37D22]"
                         : entry.type === "sync"
                           ? "bg-blue-400"
                           : entry.type === "error"

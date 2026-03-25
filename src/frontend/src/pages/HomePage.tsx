@@ -244,7 +244,7 @@ function GlobalBestSellers() {
                 <Card className="relative border border-saffron/20 hover:border-saffron/60 transition-all hover:shadow-lg overflow-hidden h-full">
                   <div
                     className="absolute top-0 left-0 right-0 flex items-center justify-center py-2 text-white text-xs font-black uppercase tracking-[0.2em]"
-                    style={{ backgroundColor: "#FF9933" }}
+                    style={{ backgroundColor: "#F37D22" }}
                   >
                     &#9733; Best Seller
                   </div>
@@ -258,7 +258,7 @@ function GlobalBestSellers() {
                     <Button
                       size="sm"
                       className="w-full font-black uppercase tracking-wider text-xs"
-                      style={{ backgroundColor: "#FF9933", color: "#fff" }}
+                      style={{ backgroundColor: "#F37D22", color: "#fff" }}
                       onClick={() => window.open(info.supplierSearch, "_blank")}
                       data-ocid={`bestsellers.primary_button.${idx + 1}`}
                     >
@@ -309,7 +309,7 @@ export default function HomePage() {
         {/* Solid Khalish Saffron background — instant, no gradient */}
         <div
           className="absolute inset-0"
-          style={{ backgroundColor: "#FF9933", zIndex: 0 }}
+          style={{ backgroundColor: "#F37D22", zIndex: 0 }}
         />
 
         {/* Two-column hero layout */}
@@ -363,7 +363,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
                 size="lg"
-                className="bg-white text-[#FF9933] hover:bg-white/90 font-black uppercase tracking-widest text-sm px-8 shadow-lg"
+                className="bg-white text-[#F37D22] hover:bg-white/90 font-black uppercase tracking-widest text-sm px-8 shadow-lg"
                 data-ocid="hero.primary_button"
               >
                 SHOP NOW <ArrowRight className="ml-2 h-4 w-4" />

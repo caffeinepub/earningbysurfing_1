@@ -18,6 +18,7 @@ import ContactPage from "./pages/ContactPage";
 import DashboardPage from "./pages/DashboardPage";
 import HomePage from "./pages/HomePage";
 import PrivacyPage from "./pages/PrivacyPage";
+import ShopAllPage from "./pages/ShopAllPage";
 import TermsPage from "./pages/TermsPage";
 import VendorPage from "./pages/VendorPage";
 
@@ -50,7 +51,7 @@ function AccessBlockedScreen() {
   return (
     <div
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
-      style={{ backgroundColor: "#FF9933" }}
+      style={{ backgroundColor: "#F37D22" }}
     >
       <div className="text-center px-8">
         <div className="text-6xl mb-6">&#128683;</div>
@@ -108,6 +109,11 @@ const adminRoute = createRoute({
   path: "/admin",
   component: AdminPage,
 });
+const shopRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/shop",
+  component: ShopAllPage,
+});
 const vendorRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/vendor",
@@ -135,6 +141,7 @@ const privacyRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
+  shopRoute,
   homeRoute,
   dashboardRoute,
   adminRoute,
