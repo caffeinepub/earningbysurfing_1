@@ -1,11 +1,10 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "@tanstack/react-router";
-import { Copy, ExternalLink, LogIn, Package, Search } from "lucide-react";
+import { Package, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import V47ProductCard from "../components/V47ProductCard";
 import { useAllInventoryProducts } from "../hooks/useQueries";
 
 interface MemberRecord {
@@ -35,7 +34,6 @@ export default function ShopAllPage() {
 
   useEffect(() => {
     setMember(getLoggedInMember());
-    // Read ?q param from URL
     const params = new URLSearchParams(window.location.search);
     const q = params.get("q");
     if (q) setSearch(q);
@@ -70,9 +68,7 @@ export default function ShopAllPage() {
     navigator.clipboard
       .writeText(smartLink)
       .then(() => {
-        toast.success("Smart Link copied!", {
-          description: smartLink,
-        });
+        toast.success("Smart Link copied!", { description: smartLink });
       })
       .catch(() => {
         toast.success("Smart Link generated!", { description: smartLink });
@@ -82,7 +78,7 @@ export default function ShopAllPage() {
   return (
     <main className="min-h-screen bg-muted/30" data-ocid="shop.page">
       {/* Hero bar */}
-      <div className="bg-[#F37D22] py-10 px-4">
+      <div style={{ backgroundColor: "#F37D22" }} className="py-10 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-3xl sm:text-4xl font-black text-white uppercase tracking-widest mb-2">
             Shop All Products
@@ -114,12 +110,22 @@ export default function ShopAllPage() {
                 key={cat}
                 type="button"
                 onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition-colors ${
-                  activeCategory === cat
-                    ? "bg-[#F37D22] text-white border-[#F37D22]"
-                    : "border-[#F37D22] text-[#F37D22] hover:bg-[#F37D22] hover:text-white"
-                }`}
                 data-ocid="shop.tab"
+                style={{
+                  backgroundColor:
+                    activeCategory === cat ? "#F37D22" : "transparent",
+                  color: activeCategory === cat ? "#FFFFFF" : "#F37D22",
+                  border: "1.5px solid #F37D22",
+                  borderRadius: "9999px",
+                  padding: "8px 16px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  fontFamily: "sans-serif",
+                  transition: "background-color 0.15s ease, color 0.15s ease",
+                }}
               >
                 {cat}
               </button>
@@ -133,14 +139,33 @@ export default function ShopAllPage() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             data-ocid="shop.loading_state"
           >
-            {["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"].map((sk) => (
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((sk) => (
               <div
                 key={sk}
-                className="bg-white rounded-xl border border-border p-4 space-y-3"
+                style={{
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  boxShadow: "0 4px 6px rgba(0,0,0,0.07)",
+                }}
               >
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-                <Skeleton className="h-8 w-full" />
+                {/* V47 skeleton top strip */}
+                <div
+                  style={{
+                    backgroundColor: "#FF8A12",
+                    opacity: 0.3,
+                    height: "160px",
+                  }}
+                />
+                {/* V47 skeleton bottom */}
+                <div
+                  style={{ backgroundColor: "#FFFFFF", padding: "18px" }}
+                  className="space-y-3"
+                >
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-5 w-1/3" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                </div>
               </div>
             ))}
           </div>
@@ -149,7 +174,7 @@ export default function ShopAllPage() {
             className="flex flex-col items-center justify-center py-24 text-center"
             data-ocid="shop.empty_state"
           >
-            <Package className="h-14 w-14 text-[#F37D22]/30 mb-4" />
+            <Package className="h-14 w-14 text-muted-foreground/30 mb-4" />
             <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">
               No products found
             </p>
@@ -160,66 +185,17 @@ export default function ShopAllPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filtered.map(([id, product], i) => (
-              <div
+              <V47ProductCard
                 key={id.toString()}
-                className="bg-white rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col gap-4"
-                data-ocid={`shop.item.${i + 1}`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-black text-sm uppercase tracking-wide text-foreground leading-tight">
-                    {product.name}
-                  </h3>
-                  <Badge
-                    className="flex-shrink-0 text-[10px] uppercase tracking-wider"
-                    style={{ background: "#F37D22", color: "white" }}
-                  >
-                    {product.category}
-                  </Badge>
-                </div>
-                <p className="text-xl font-black text-[#F37D22]">
-                  ${product.price.toFixed(2)}
-                </p>
-                <div className="flex flex-col gap-2 mt-auto">
-                  <a
-                    href={product.affiliateLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#F37D22] border border-[#F37D22] rounded-lg py-2 hover:bg-[#F37D22] hover:text-white transition-colors"
-                    data-ocid="shop.button"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" /> View Product
-                  </a>
-                  {member ? (
-                    <Button
-                      size="sm"
-                      className="bg-[#F37D22] hover:bg-orange-600 text-white text-xs font-bold uppercase tracking-wider w-full"
-                      onClick={() => handleSmartLink(product)}
-                      data-ocid="shop.primary_button"
-                    >
-                      <Copy className="h-3.5 w-3.5 mr-1.5" /> Generate Smart
-                      Link
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-[#F37D22] text-[#F37D22] text-xs font-bold uppercase tracking-wider w-full hover:bg-[#F37D22] hover:text-white"
-                      onClick={() =>
-                        toast.info("Login to generate Smart Links", {
-                          description: "Visit your dashboard to log in.",
-                          action: {
-                            label: "Dashboard",
-                            onClick: () => navigate({ to: "/dashboard" }),
-                          },
-                        })
-                      }
-                      data-ocid="shop.secondary_button"
-                    >
-                      <LogIn className="h-3.5 w-3.5 mr-1.5" /> Login to Generate
-                    </Button>
-                  )}
-                </div>
-              </div>
+                name={product.name}
+                price={product.price}
+                category={product.category}
+                affiliateLink={product.affiliateLink}
+                isLoggedIn={!!member}
+                onSmartLink={() => handleSmartLink(product)}
+                index={i}
+                ocidIndex={i + 1}
+              />
             ))}
           </div>
         )}

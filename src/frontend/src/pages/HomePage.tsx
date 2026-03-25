@@ -14,6 +14,7 @@ import {
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Category } from "../backend";
+import AnkerProductCard from "../components/AnkerProductCard";
 import EBSGlobeRight from "../components/EBSGlobeRight";
 import { CURATED_PRODUCTS } from "../data/curatedProducts";
 import {
@@ -391,6 +392,132 @@ export default function HomePage() {
           className="absolute bottom-0 left-0 right-0 h-16 bg-white"
           style={{ clipPath: "ellipse(55% 100% at 50% 100%)", zIndex: 11 }}
         />
+      </section>
+
+      {/* ── Featured Product — Anker 737 Power Bank UHD Card ── */}
+      <section className="py-20 bg-white" data-ocid="featured_product.section">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground mb-2">
+              Top Trending Pick
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-wide text-saffron mb-2">
+              Featured Product
+            </h2>
+            <p className="text-sm text-muted-foreground normal-case mb-4">
+              AI Score&nbsp;92 &mdash; Highest rated tech product this week
+            </p>
+            <div
+              className="w-16 h-1 mx-auto rounded-full"
+              style={{ backgroundColor: "#FF8A12" }}
+            />
+          </motion.div>
+
+          {/* Card + info side-by-side on desktop */}
+          <div className="flex flex-col lg:flex-row items-center gap-12 justify-center">
+            {/* The UHD product card */}
+            <AnkerProductCard />
+
+            {/* Companion info panel */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              className="max-w-sm"
+            >
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-white text-xs font-black uppercase tracking-widest mb-5"
+                style={{ backgroundColor: "#FF8A12" }}
+              >
+                <span>&#9733;</span>
+                <span>AI Score 92 / 100</span>
+              </div>
+
+              <h3 className="text-2xl font-black uppercase tracking-wide text-foreground mb-3">
+                Anker 737 Power Bank 24000mAh
+              </h3>
+
+              <p className="text-sm text-muted-foreground normal-case leading-relaxed mb-6">
+                The industry&apos;s top-rated portable charger. 140W
+                bi-directional charging powers a MacBook from 0&ndash;50% in 30
+                minutes. Dual USB-C and USB-A ports charge up to 3 devices
+                simultaneously.
+              </p>
+
+              <ul className="space-y-2 mb-8">
+                {[
+                  "24,000mAh — enough for 3 full laptop charges",
+                  "140W Max Output via USB-C PD",
+                  "Fast Charge 3.0 on USB-A port",
+                  "Smart digital display shows exact battery %",
+                  "TSA-approved for carry-on luggage",
+                ].map((feat) => (
+                  <li
+                    key={feat}
+                    className="flex items-start gap-2 text-sm text-foreground font-medium"
+                  >
+                    <span
+                      style={{
+                        color: "#FF8A12",
+                        fontWeight: 900,
+                        flexShrink: 0,
+                      }}
+                    >
+                      &#10003;
+                    </span>
+                    <span className="normal-case">{feat}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  data-ocid="featured_product.secondary_button"
+                  style={{
+                    padding: "11px 24px",
+                    borderRadius: "8px",
+                    backgroundColor: "#FF8A12",
+                    color: "#fff",
+                    fontWeight: 900,
+                    fontSize: "12px",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 14px rgba(255,138,18,0.4)",
+                  }}
+                >
+                  GET AFFILIATE LINK
+                </button>
+                <button
+                  type="button"
+                  data-ocid="featured_product.cancel_button"
+                  style={{
+                    padding: "11px 24px",
+                    borderRadius: "8px",
+                    backgroundColor: "transparent",
+                    color: "#FF8A12",
+                    fontWeight: 900,
+                    fontSize: "12px",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    border: "2px solid #FF8A12",
+                    cursor: "pointer",
+                  }}
+                >
+                  LEARN MORE
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </div>
       </section>
 
       <GlobalBestSellers />
