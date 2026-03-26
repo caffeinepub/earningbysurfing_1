@@ -251,6 +251,8 @@ actor {
     ("Belkin MagSafe 3-in-1 Charger", 99.99, "Tech", "https://www.amazon.com/s?k=Belkin+MagSafe+3-in-1"),
     ("Anker Soundcore Motion X600", 99.99, "Tech", "https://www.amazon.com/s?k=Anker+Soundcore+Motion+X600"),
     ("Wacom Intuos Pro Medium Tablet", 349.95, "Tech", "https://www.amazon.com/s?k=Wacom+Intuos+Pro+Medium"),
+    ("High-Speed Type-C Gaming Cable", 19.99, "Tech", "https://www.amazon.com/s?k=High+Speed+Type+C+Gaming+Cable"),
+    ("Wireless Ergonomic Mouse", 49.99, "Tech", "https://www.amazon.com/s?k=Wireless+Ergonomic+Mouse"),
     // Lifestyle (30 products)
     ("YETI Rambler 30 oz Tumbler", 34.99, "Lifestyle", "https://www.amazon.com/s?k=YETI+Rambler+30+oz"),
     ("Osprey Farpoint 40 Backpack", 160.00, "Lifestyle", "https://www.amazon.com/s?k=Osprey+Farpoint+40"),
